@@ -1,0 +1,326 @@
+{
+  "scenarios": [
+    {
+      "name": "open, full and closed slots read differently and roll into one occupied-spots tally",
+      "members": {
+        "host": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('ui-oc1', ?, ?, '', 'no', 'open', ?, 'Host', datetime('now'))",
+          "params": [
+            "Parent-teacher conferences",
+            "Room 12",
+            "{{host}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('ui-sl1', 'ui-oc1', '2026-03-03', '14:00', '14:15', ?, ?, 1, 'open', datetime('now'))",
+          "params": [
+            "Tue, Mar 3 · 2:00–2:15 PM",
+            "Parent-teacher conferences"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('ui-sl2', 'ui-oc1', '2026-03-03', '14:15', '14:30', ?, ?, 2, 'open', datetime('now'))",
+          "params": [
+            "Tue, Mar 3 · 2:15–2:30 PM",
+            "Parent-teacher conferences"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('ui-sl3', 'ui-oc1', '2026-03-04', '09:00', '09:15', ?, ?, 1, 'closed', datetime('now'))",
+          "params": [
+            "Wed, Mar 4 · 9:00–9:15 AM",
+            "Parent-teacher conferences"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES ('ui-b1', 'ui-oc1', 'ui-sl2', 'Marta Okafor', '555-0114', '', datetime('now')), ('ui-b2', 'ui-oc1', 'ui-sl2', 'Ken Ito', '', '', datetime('now'))"
+        },
+        {
+          "action": "open"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc1\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc1\"]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"slot-list\"]"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-card\"]",
+          "count": 3
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-day\"]",
+          "count": 2
+        },
+        {
+          "action": "expectVisible",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl1\"] [data-testid=\"slot-state-open\"]"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl2\"] [data-testid=\"slot-state-full\"]"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl3\"] [data-testid=\"slot-state-closed\"]"
+        },
+        {
+          "action": "expectText",
+          "text": "2/2",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl2\"] [data-testid=\"slot-tally\"]"
+        },
+        {
+          "action": "expectText",
+          "text": "0/1",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl1\"] [data-testid=\"slot-tally\"]"
+        },
+        {
+          "action": "expectText",
+          "text": "Marta Okafor",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl2\"] [data-testid=\"slot-bookings\"]"
+        },
+        {
+          "action": "expectText",
+          "text": "555-0114",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl2\"] [data-testid=\"slot-bookings\"]"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl1\"] [data-testid=\"booking-chip\"]",
+          "count": 0
+        },
+        {
+          "action": "expectText",
+          "text": "2/3 spots booked",
+          "selector": "[data-testid=\"occasion-progress\"]"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-capacity\"]",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "a child reads who booked what but gets no organizer controls",
+      "members": {
+        "kid": "child"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('ui-oc1', ?, '', '', 'no', 'open', 'someone-else', 'Host', datetime('now'))",
+          "params": [
+            "Coach tryouts"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('ui-sl1', 'ui-oc1', '2026-03-03', '09:00', '09:20', ?, ?, 2, 'open', datetime('now'))",
+          "params": [
+            "Tue, Mar 3 · 9:00–9:20 AM",
+            "Coach tryouts"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES ('ui-b1', 'ui-oc1', 'ui-sl1', 'Marta Okafor', '', '', datetime('now'))"
+        },
+        {
+          "action": "open",
+          "as": "kid"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc1\"]",
+          "as": "kid"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc1\"]",
+          "as": "kid"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"slot-list\"]",
+          "as": "kid"
+        },
+        {
+          "action": "expectText",
+          "text": "Marta Okafor",
+          "selector": "[data-testid=\"slot-card\"][data-slot-id=\"ui-sl1\"] [data-testid=\"slot-bookings\"]",
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-capacity\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"occasion-share\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"occasion-edit\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"occasion-delete\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-toggle\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-remove\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"add-slots\"]",
+          "count": 0,
+          "as": "kid"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"new-occasion\"]",
+          "count": 0,
+          "as": "kid"
+        }
+      ]
+    },
+    {
+      "name": "sharing an occasion with no open slot warns that the form has nothing to offer",
+      "members": {
+        "host": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at, source_event_id) VALUES ('ui-oc-auto', ?, '', '', 'no', 'open', 'automation', 'Automation', datetime('now'), 'ev-src-1')",
+          "params": [
+            "Conference day"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('ui-oc-open', ?, '', '', 'no', 'open', ?, 'Host', datetime('now'))",
+          "params": [
+            "Driveway-sale pickups",
+            "{{host}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('ui-sl-open', 'ui-oc-open', '2026-03-01', '10:00', '10:30', ?, ?, 1, 'open', datetime('now'))",
+          "params": [
+            "Sun, Mar 1 · 10:00–10:30 AM",
+            "Driveway-sale pickups"
+          ]
+        },
+        {
+          "action": "open"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc-auto\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc-auto\"]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"slot-list\"]"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"slot-card\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-share\"]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"share-modal\"]"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "[data-testid=\"share-no-slots\"]"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "[data-testid=\"share-show-bookings\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-modal-cancel]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"share-modal\"]",
+          "state": "detached"
+        },
+        {
+          "action": "click",
+          "selector": "[data-back]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc-open\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-card\"][data-occasion-id=\"ui-oc-open\"]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"slot-list\"]"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid=\"occasion-share\"]"
+        },
+        {
+          "action": "waitFor",
+          "selector": "[data-testid=\"share-modal\"]"
+        },
+        {
+          "action": "expectCount",
+          "selector": "[data-testid=\"share-no-slots\"]",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Slots</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: var(--hub-bg, #f9fafb);
+      --surface: var(--hub-surface, #ffffff);
+      --border: var(--hub-border, #e5e7eb);
+      --border-mid: var(--hub-border, #d1d5db);
+      --text: var(--hub-text, #000000);
+      --muted: var(--hub-text-muted, #6b7280);
+      --accent: var(--hub-primary, #111827);
+      --accent-hover: var(--hub-primary-hover, #374151);
+      --accent-fg: var(--hub-primary-fg, #ffffff);
+      --radius: var(--hub-radius, 8px);
+      --green: #047857; --green-soft: #d1fae5;
+      --amber: #b45309; --amber-soft: #fef3c7;
+      --red: #b91c1c; --red-soft: #fee2e2;
+      --blue-soft: #dbeafe;
+      --shadow: 0 1px 3px rgba(15, 23, 42, .07);
+    }
+    body {
+      min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: var(--hub-font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      font-size: var(--hub-font-size, 15px); line-height: 1.5;
+    }
+    .app { max-width: 820px; margin: 0 auto; padding: 16px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    h1 { font-size: 1.35rem; line-height: 1.2; }
+    h2 { font-size: 1rem; margin-bottom: 10px; }
+    .muted { color: var(--muted); }
+    .tiny { font-size: .78rem; }
+    .stack { display: grid; gap: 12px; }
+    .grid { display: grid; gap: 12px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px;
+    }
+    .occasion-card { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .occasion-card:hover { border-color: var(--border-mid); box-shadow: 0 5px 14px rgba(15, 23, 42, .08); }
+    .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .title { font-weight: 750; font-size: 1rem; }
+    .meta { margin-top: 3px; color: var(--muted); font-size: .82rem; }
+    .progress { height: 8px; overflow: hidden; border-radius: 999px; background: #eef2f7; margin-top: 10px; }
+    .progress > span { display: block; height: 100%; background: var(--green); border-radius: 999px; }
+    .pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 24px; padding: 2px 8px; border-radius: 999px;
+      background: #f1f5f9; color: var(--muted); font-size: .74rem; font-weight: 700; white-space: nowrap;
+    }
+    .pill.good { background: var(--green-soft); color: var(--green); }
+    .pill.warn { background: var(--amber-soft); color: var(--amber); }
+    .pill.info { background: var(--blue-soft); color: #1d4ed8; }
+    .tabs { display: flex; gap: 4px; background: var(--border); padding: 3px; border-radius: 10px; margin-bottom: 14px; }
+    .tab { flex: 1; border: 0; border-radius: 8px; background: transparent; color: var(--muted); padding: 7px; font-weight: 700; cursor: pointer; }
+    .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 10px; }
+    .section-head h2 { margin-bottom: 0; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid transparent; border-radius: 8px; padding: 8px 12px;
+      font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer;
+      min-height: 38px; background: var(--accent); color: var(--accent-fg);
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: .48; cursor: default; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-mid); }
+    .btn-ghost:hover { background: #f8fafc; }
+    .btn-danger { background: var(--red-soft); color: var(--red); border-color: transparent; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-quiet-danger { min-height: 28px; padding: 3px 6px; background: transparent; color: var(--muted); border: 0; font-size: .76rem; font-weight: 700; }
+    .btn-quiet-danger:hover { background: var(--red-soft); color: var(--red); }
+    .btn-sm { min-height: 31px; padding: 5px 9px; font-size: .78rem; }
+    .back { margin-bottom: 10px; }
+    .slot-day { font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 2px; }
+    .slot-day:first-child { margin-top: 0; }
+    .slot { display: grid; gap: 8px; padding: 10px 0; border-top: 1px solid var(--border); }
+    .slot-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .slot-name { font-weight: 750; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px 3px 4px; font-size: .78rem; }
+    .avatar { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: .72rem; font-weight: 800; background: #0f766e; }
+    .slot-cap { display: flex; align-items: center; gap: 6px; }
+    .slot-cap input { width: 64px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: .78rem; }
+    .share-row { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .share-url { width: 100%; font-size: .8rem; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+    .share-opt { display: flex; gap: 6px; align-items: center; font-size: .85rem; margin-top: 10px; }
+    #share-password { width: 100%; margin-top: 8px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: .85rem; }
+    .share-create { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+    .share-create select { padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: .85rem; }
+    .warn-box { background: var(--amber-soft); color: var(--amber); padding: 8px 10px; border-radius: 8px; font-size: .82rem; margin: 8px 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .form { display: grid; gap: 10px; }
+    .field { display: grid; gap: 4px; }
+    label { font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
+    input, textarea, select {
+      width: 100%; border: 1.5px solid var(--border-mid); border-radius: 8px;
+      padding: 9px 11px; font: inherit; background: var(--surface); color: var(--text);
+    }
+    textarea { min-height: 66px; resize: vertical; }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .add-slots { display: grid; grid-template-columns: 140px 96px 96px 84px 84px auto; gap: 8px; align-items: end; margin-top: 12px; }
+    .add-slots .field label { font-size: .7rem; }
+    .empty, .loading { color: var(--muted); text-align: center; padding: 32px 16px; }
+    .error { background: var(--red-soft); color: var(--red); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .86rem; }
+    .notice { background: var(--green-soft); color: var(--green); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .86rem; }
+    @media (min-width: 700px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) {
+      .topbar, .head, .slot-top { align-items: stretch; flex-direction: column; }
+      .add-slots { grid-template-columns: 1fr 1fr; }
+      .actions .btn { flex: 1; }
+    }
+    .search-row { margin-bottom: 12px; }
+    .search-input {
+      width: 100%; border: 1.5px solid var(--border-mid, var(--border, #d1d5db));
+      border-radius: 8px; padding: 9px 11px; font: inherit;
+      background: var(--surface, #fff); color: var(--text, inherit);
+    }
+    .search-input:focus { outline: none; border-color: var(--accent, #6366f1); }
+  </style>
+  <base href="/run/booking-slots/">
+</head>
+<body>
+<div class="app"><div id="root" class="loading">Loading…</div></div>
+
+<script type="module">
+import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper } from "/hub-sdk.js";
+import {
+  canManage as _canManage, dateLabel, timeToMinutes, timeLabel, slotLabel, slotTimes, normalizeTimestamp,
+  bookingsForSlot, isSlotFull, parseCapacity, slotState,
+  slotsForOccasion, openSlotsForForm, occasionTotals as _occasionTotals, searchableFields,
+} from "./logic.js";
+
+const CONTEXT    = window.__CONTEXT_URL    ?? "";
+const DB         = window.__DB_URL         ?? "";
+const EVENTS_URL = window.__EVENTS_URL     ?? "/api/events";
+const APP_ID     = window.__APP_ID         ?? "booking-slots";
+const ME         = window.__CURRENT_MEMBER ?? null;
+const DB_PAGE_SIZE = 1000;
+const ATOMIC_SLOT_LIMIT = 25;
+
+// Share links. `enabled` is false unless the hub injected the URLs, which it
+// only does for a manifest declaring `shareable` — so every share control is
+// gated on it rather than on the app assuming the surface exists.
+const share = createShareHelper(window.__SHARE_CREATE_URL, window.__SHARE_REVOKE_URL, window.__SHARE_LIST_URL);
+
+let members = [];
+let currentMember = null;
+let occasions = [];
+let slots = [];
+let bookings = [];         // share-link bookings (endpoint_only: read-only in here)
+let selectedOccasionId = null;
+let view = "active";       // "active" | "closed" | "create"
+let editingOccasionId = null;
+let searchQ = "";
+let error = "";
+let notice = "";
+
+// ── thin wrappers binding pure logic to app state ──
+function canManage() { return _canManage(currentMember); }
+function occasionTotals(occasionId) { return _occasionTotals(occasionId, slots, bookings); }
+function occasionSlots(occasionId) { return slotsForOccasion(slots, occasionId); }
+function bookingsFor(slotId) { return bookingsForSlot(bookings, slotId); }
+function openForForm(occasionId) { return openSlotsForForm(slots, bookings, occasionId); }
+
+function replaceBookings(matches, current) {
+  bookings = [...bookings.filter(b => !matches(b)), ...current]
+    .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")) || String(a.id ?? "").localeCompare(String(b.id ?? "")));
+}
+async function refreshSlotBookings(slotId) {
+  if (!DB) return bookingsFor(slotId);
+  const current = await dbAll(
+    "SELECT * FROM app_booking_slots__bookings WHERE slot_id = ? ORDER BY created_at ASC, id ASC",
+    [slotId],
+  );
+  replaceBookings(b => b.slot_id === slotId, current);
+  return current;
+}
+async function refreshOccasionBookings(occasionId) {
+  if (!DB) return bookings.filter(b => b.occasion_id === occasionId);
+  const current = await dbAll(
+    "SELECT * FROM app_booking_slots__bookings WHERE occasion_id = ? ORDER BY created_at ASC, id ASC",
+    [occasionId],
+  );
+  replaceBookings(b => b.occasion_id === occasionId, current);
+  return current;
+}
+
+const nowIso = () => new Date().toISOString();
+const uid = (p) => `${p}-${crypto.randomUUID()}`;
+function fmtStamp(v) {
+  const d = new Date(normalizeTimestamp(v));
+  if (isNaN(d)) return "";
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(d);
+}
+function selectedOccasion() { return occasions.find(o => o.id === selectedOccasionId) ?? null; }
+
+async function dbq(sql, params = []) {
+  if (!DB) return { rows: [] };
+  const res = await fetch(DB, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, params }),
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+async function dbBatch(statements) {
+  if (!DB) return { results: [] };
+  const res = await fetch(DB, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ statements }),
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+async function dbAll(sql, params = []) {
+  const rows = [];
+  for (let offset = 0; ; offset += DB_PAGE_SIZE) {
+    const page = await dbq(`${sql} LIMIT ? OFFSET ?`, [...params, DB_PAGE_SIZE, offset]);
+    rows.push(...page.rows);
+    if (page.rows.length < DB_PAGE_SIZE) return rows;
+  }
+}
+function publish(type, subject_id, payload) {
+  fetch(EVENTS_URL, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source_app_id: APP_ID, type, subject_id, payload }),
+  }).catch(() => {});
+}
+
+// ── data ──
+async function loadMembers() {
+  if (!CONTEXT) {
+    members = [
+      { id: "demo-1", name: "Alex", role: "adult" },
+      { id: "demo-2", name: "Jordan", role: "adult" },
+      { id: "demo-3", name: "Casey", role: "child" },
+    ];
+  } else {
+    try {
+      const res = await fetch(`${CONTEXT}?keys=family.members`);
+      members = ((await res.json())["family.members"]) ?? [];
+    } catch { members = []; }
+  }
+  currentMember = ME ?? members[0] ?? { id: "guest", name: "Guest", role: "adult" };
+}
+
+function seedDemo() {
+  const occasionId = "demo-occasion";
+  occasions = [{
+    id: occasionId, title: "Parent-teacher conferences", location: "Room 12",
+    description: "Fifteen minutes each. Please arrive a few minutes early.",
+    show_bookings: "no", status: "open",
+    created_by: "demo-1", created_by_name: "Alex", created_at: nowIso(),
+  }];
+  slots = slotTimes("14:00", "14:45", 15).map((t, i) => ({
+    id: `demo-slot-${i}`, occasion_id: occasionId, slot_date: "2026-03-03",
+    start_time: t.start, end_time: t.end, label: slotLabel("2026-03-03", t.start, t.end),
+    occasion_title: occasions[0].title, capacity: 1, status: "open", created_at: nowIso(),
+  }));
+  bookings = [
+    { id: "b-1", occasion_id: occasionId, slot_id: "demo-slot-1", guest_name: "Marta Okafor",
+      guest_contact: "555-0114", guest_note: "Running from work, may be 2 min late", created_at: "2026-03-01 17:04:00" },
+  ];
+}
+
+async function loadData() {
+  if (!DB) { seedDemo(); return; }
+  const [occasionRows, slotRows, bookingRows] = await Promise.all([
+    dbAll("SELECT * FROM app_booking_slots__occasions ORDER BY created_at ASC, id ASC"),
+    dbAll("SELECT * FROM app_booking_slots__slots ORDER BY slot_date ASC, start_time ASC, created_at ASC, id ASC"),
+    // Same order the public feed renders in (manifest shareable.occasion.feed,
+    // order_column created_at / oldest), so the two views agree.
+    dbAll("SELECT * FROM app_booking_slots__bookings ORDER BY created_at ASC, id ASC"),
+  ]);
+  occasions = occasionRows;
+  slots = slotRows;
+  bookings = bookingRows;
+}
+
+// `deepLink` is honoured on the FIRST load only. Re-applying ?occasionId on
+// every refresh would drag the organizer back into that occasion's detail view
+// every time they pressed Refresh after backing out of it.
+async function refresh({ deepLink = false } = {}) {
+  clearMessages();
+  try {
+    await Promise.all([loadMembers(), loadData()]);
+    if (selectedOccasionId && !occasions.some(o => o.id === selectedOccasionId)) selectedOccasionId = null;
+    if (deepLink) handleDeepLink();
+    render();
+  } catch (e) { error = e.message; render(); }
+}
+function handleDeepLink() {
+  const occasionId = new URLSearchParams(window.location.search).get("occasionId");
+  if (occasionId && occasions.some(o => o.id === occasionId)) selectedOccasionId = occasionId;
+}
+
+function clearMessages() { error = ""; notice = ""; }
+function showError(m) { error = m; notice = ""; render(); }
+function showNotice(m) { notice = m; error = ""; render(); }
+
+// ── mutations ──
+async function saveOccasion(form) {
+  if (!canManage()) return showError("Only adults can open a booking sheet.");
+  const f = (name) => (form[name]?.value ?? "").trim();
+  const title = f("title");
+  if (!title) { form.title.focus(); return; }
+  const fields = { title, location: f("location"), description: f("description") };
+
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+
+  try {
+    if (editingOccasionId) {
+      await updateOccasion(editingOccasionId, fields);
+    } else {
+      await createOccasion(fields);
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = editingOccasionId ? "Save changes" : "Open booking sheet"; }
+    showError(e.message);
+  }
+}
+
+async function createOccasion(fields) {
+  const occasion = {
+    id: uid("occ"), ...fields, show_bookings: "no", status: "open",
+    created_by: currentMember.id, created_by_name: currentMember.name, created_at: nowIso(),
+  };
+  if (DB) {
+    await dbq(
+      `INSERT INTO app_booking_slots__occasions
+         (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at)
+       VALUES (?, ?, ?, ?, 'no', 'open', ?, ?, ?)`,
+      [occasion.id, occasion.title, occasion.location, occasion.description,
+       occasion.created_by, occasion.created_by_name, occasion.created_at]
+    );
+  }
+  occasions = [...occasions, occasion];
+  selectedOccasionId = occasion.id;
+  view = "active";
+  editingOccasionId = null;
+  showNotice("Booking sheet opened. Add the time slots people can book.");
+  publish("booking_slots.occasion_opened", occasion.id, { title: occasion.title });
+}
+
+/**
+ * Editing an occasion re-stamps `occasion_title` on every one of its slots in
+ * the same call. That column is denormalized so the Today agenda and the
+ * glance tile — projections that cannot re-derive the parent title per row —
+ * have a title to show; letting it drift would leave Today naming an occasion
+ * that no longer exists under that name.
+ */
+async function updateOccasion(occasionId, fields) {
+  if (DB) {
+    await dbBatch([
+      {
+        sql: "UPDATE app_booking_slots__occasions SET title = ?, location = ?, description = ? WHERE id = ?",
+        params: [fields.title, fields.location, fields.description, occasionId],
+      },
+      {
+        sql: "UPDATE app_booking_slots__slots SET occasion_title = ? WHERE occasion_id = ?",
+        params: [fields.title, occasionId],
+      },
+    ]);
+  }
+  const i = occasions.findIndex(o => o.id === occasionId);
+  if (i !== -1) occasions[i] = { ...occasions[i], ...fields };
+  slots = slots.map(s => (s.occasion_id === occasionId ? { ...s, occasion_title: fields.title } : s));
+  editingOccasionId = null;
+  selectedOccasionId = occasionId;
+  view = "active";
+  showNotice("Booking sheet updated.");
+}
+
+// One place builds a slot row, so `label` and `occasion_title` can never be
+// written without the columns they mirror.
+function newSlotRow(occasion, slotDate, start, end, capacity = 1) {
+  return {
+    id: uid("slot"), occasion_id: occasion.id, slot_date: slotDate,
+    start_time: start, end_time: end, label: slotLabel(slotDate, start, end),
+    occasion_title: occasion.title, capacity: parseCapacity(capacity, 1),
+    status: "open", created_at: nowIso(),
+  };
+}
+function insertSlotStatement(s) {
+  return {
+    sql: `INSERT INTO app_booking_slots__slots
+            (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)`,
+    params: [s.id, s.occasion_id, s.slot_date, s.start_time, s.end_time, s.label, s.occasion_title, s.capacity, s.created_at],
+  };
+}
+
+async function addSlots(form) {
+  if (!canManage()) return showError("Only adults can add slots.");
+  const occasion = selectedOccasion();
+  if (!occasion) return;
+  const slotDate = form.slot_date.value;
+  if (!slotDate) { form.slot_date.focus(); return; }
+  const from = form.start_time.value;
+  if (!from) { form.start_time.focus(); return; }
+  const to = form.end_time.value;
+  const fromMinutes = timeToMinutes(from);
+  const toMinutes = to ? timeToMinutes(to) : null;
+  if (to && (toMinutes === null || toMinutes <= fromMinutes)) {
+    return showError("End time must be after the start time.");
+  }
+  // "Every N minutes" from `from` to `to` generates a run of slots — the
+  // conference-afternoon case. With no interval (or no end) the window is one
+  // slot. Bounded inside slotTimes().
+  const times = slotTimes(from, to, form.every_mins.value);
+  if (!times.length) { form.start_time.focus(); return; }
+  if (times.length > ATOMIC_SLOT_LIMIT) {
+    return showError(`That window creates more than ${ATOMIC_SLOT_LIMIT} slots. Shorten the window or use a longer interval.`);
+  }
+  const rows = times.map(t => newSlotRow(occasion, slotDate, t.start, t.end, form.capacity.value));
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = "Adding…"; }
+  try {
+    // The app DB's batch form commits all statements in one transaction. The
+    // generator is capped at the same 25-statement request limit in slotTimes,
+    // so a run can never become partially visible after a failed request.
+    if (DB) await dbBatch(rows.map(insertSlotStatement));
+    slots = [...slots, ...rows];
+    form.reset();
+    form.capacity.value = "1";
+    showNotice(rows.length === 1 ? `Added ${rows[0].label}.` : `Added ${rows.length} slots on ${dateLabel(slotDate)}.`);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = "Add"; }
+    showError(e.message);
+  }
+}
+
+async function removeSlot(slotId) {
+  if (!canManage()) return showError("Only adults can remove slots.");
+  const slot = slots.find(s => s.id === slotId);
+  if (!slot) return;
+  const previousStatus = slot.status;
+  let admissionPaused = false;
+  try {
+    // Stop public admission before counting. Otherwise a visitor can book
+    // after the warning was composed but before the cascading DELETE commits.
+    if (previousStatus !== "closed") {
+      if (DB) await dbq("UPDATE app_booking_slots__slots SET status = 'closed' WHERE id = ?", [slotId]);
+      slot.status = "closed";
+      admissionPaused = true;
+    }
+    const taken = (await refreshSlotBookings(slotId)).length;
+    const ok = await hubConfirm({
+      message: `Remove ${slot.label}?`,
+      description: taken
+        ? `${taken} ${taken === 1 ? "person is" : "people are"} currently booked. Removing the slot removes every booking on it at deletion time.`
+        : "Removing the slot also removes any booking on it at deletion time. It cannot be undone.",
+      confirmLabel: "Remove",
+      destructive: true,
+    });
+    if (!ok) {
+      if (admissionPaused && DB) await dbq("UPDATE app_booking_slots__slots SET status = ? WHERE id = ?", [previousStatus, slotId]);
+      slot.status = previousStatus;
+      render();
+      return;
+    }
+    if (DB) await dbq("DELETE FROM app_booking_slots__slots WHERE id = ?", [slotId]);
+    slots = slots.filter(s => s.id !== slotId);
+    bookings = bookings.filter(b => b.slot_id !== slotId);
+    showNotice("Slot removed.");
+  } catch (e) {
+    if (admissionPaused && slots.some(s => s.id === slotId)) {
+      try {
+        if (DB) await dbq("UPDATE app_booking_slots__slots SET status = ? WHERE id = ?", [previousStatus, slotId]);
+        slot.status = previousStatus;
+      } catch { /* Staying closed is safer than reopening after an uncertain failure. */ }
+    }
+    showError(e.message);
+  }
+}
+
+async function toggleSlotClosed(slotId) {
+  if (!canManage()) return;
+  const slot = slots.find(s => s.id === slotId);
+  if (!slot) return;
+  const closing = slot.status !== "closed";
+  if (closing && bookingsFor(slotId).length) {
+    const ok = await hubConfirm({
+      message: `Close ${slot.label}?`,
+      description: "The bookings already on it are kept — closing only stops new ones.",
+      confirmLabel: "Close",
+    });
+    if (!ok) return;
+  }
+  const status = closing ? "closed" : "open";
+  try {
+    if (DB) await dbq("UPDATE app_booking_slots__slots SET status = ? WHERE id = ?", [status, slotId]);
+    const i = slots.findIndex(s => s.id === slotId);
+    if (i !== -1) slots[i] = { ...slots[i], status };
+    render();
+  } catch (e) { showError(e.message); }
+}
+
+// How many bookings this slot accepts. The hub enforces it atomically inside
+// the submit INSERT; CHECK (capacity >= 1) means a slot that should take
+// nobody is closed, never resized to zero.
+async function setCapacity(slotId, raw) {
+  if (!canManage()) return;
+  const slot = slots.find(s => s.id === slotId);
+  if (!slot) return;
+  const current = Number(slot.capacity || 1);
+  // A cleared or nonsense field means "leave it alone". Reading it as a
+  // default would silently resize the slot on a stray keystroke.
+  const next = parseCapacity(raw, current);
+  if (next === current) { render(); return; }
+  try {
+    if (DB && next < current) {
+      // The count predicate and UPDATE run in one DB statement. A concurrent
+      // public INSERT is serialized either before this count (and blocks the
+      // reduction) or after the new capacity (and is rejected by the Hub).
+      const result = await dbq(
+        `UPDATE app_booking_slots__slots SET capacity = ?
+         WHERE id = ? AND ? >= (
+           SELECT COUNT(*) FROM app_booking_slots__bookings WHERE slot_id = ?
+         )`,
+        [next, slotId, next, slotId],
+      );
+      if (result.changes === 0) {
+        const occupied = (await refreshSlotBookings(slotId)).length;
+        return showError(`This slot already has ${occupied} bookings. Capacity cannot be lower than that.`);
+      }
+    } else if (!DB && next < bookingsFor(slotId).length) {
+      const occupied = bookingsFor(slotId).length;
+      return showError(`This slot already has ${occupied} bookings. Capacity cannot be lower than that.`);
+    } else if (DB) {
+      await dbq("UPDATE app_booking_slots__slots SET capacity = ? WHERE id = ?", [next, slotId]);
+    }
+    const i = slots.findIndex(s => s.id === slotId);
+    if (i !== -1) slots[i] = { ...slots[i], capacity: next };
+    render();
+  } catch (e) { showError(e.message); }
+}
+
+async function setOccasionStatus(occasionId, status) {
+  if (!canManage()) return showError("Only adults can close a booking sheet.");
+  if (status === "closed") {
+    const ok = await hubConfirm({
+      message: "Close this booking sheet?",
+      description: "Every share link on it stops working immediately. Nothing is deleted — you can reopen it.",
+      confirmLabel: "Close",
+    });
+    if (!ok) return;
+  }
+  try {
+    if (DB) await dbq("UPDATE app_booking_slots__occasions SET status = ? WHERE id = ?", [status, occasionId]);
+    const i = occasions.findIndex(o => o.id === occasionId);
+    if (i !== -1) occasions[i] = { ...occasions[i], status };
+    showNotice(status === "closed" ? "Booking sheet closed." : "Booking sheet reopened.");
+  } catch (e) { showError(e.message); }
+}
+
+// The public who's-booked feed is gated per occasion (feed parent_where reads
+// this column off the shared row). Names on a driveway-sale page are normal;
+// names on a conference page are not — so it is the organizer's call, and the
+// default is private.
+async function setShowBookings(occasionId, show) {
+  if (!canManage()) return;
+  const value = show ? "yes" : "no";
+  try {
+    if (DB) await dbq("UPDATE app_booking_slots__occasions SET show_bookings = ? WHERE id = ?", [value, occasionId]);
+    const i = occasions.findIndex(o => o.id === occasionId);
+    if (i !== -1) occasions[i] = { ...occasions[i], show_bookings: value };
+  } catch (e) {
+    const checkbox = modalEl?.querySelector("[data-show-bookings]");
+    if (checkbox) checkbox.checked = occasions.find(o => o.id === occasionId)?.show_bookings === "yes";
+    hubAlert("Couldn't update the setting", { description: e.message });
+  }
+}
+
+async function deleteOccasion(occasionId) {
+  if (!canManage()) return showError("Only adults can delete a booking sheet.");
+  const occasion = occasions.find(o => o.id === occasionId);
+  if (!occasion) return;
+  const previousStatus = occasion.status;
+  let admissionPaused = false;
+  try {
+    // Closing the parent is the public submit path's admission gate. Once it
+    // commits, the fresh count and warning cannot become stale before delete.
+    if (previousStatus !== "closed") {
+      if (DB) await dbq("UPDATE app_booking_slots__occasions SET status = 'closed' WHERE id = ?", [occasionId]);
+      occasion.status = "closed";
+      admissionPaused = true;
+    }
+    const taken = (await refreshOccasionBookings(occasionId)).length;
+    const ok = await hubConfirm({
+      message: `Delete "${occasion.title}"?`,
+      description: taken
+        ? `There are currently ${taken} bookings. This deletes every slot and every booking present at deletion time. It cannot be undone.`
+        : "This deletes every slot and any booking present at deletion time. It cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) {
+      if (admissionPaused && DB) await dbq("UPDATE app_booking_slots__occasions SET status = ? WHERE id = ?", [previousStatus, occasionId]);
+      occasion.status = previousStatus;
+      render();
+      return;
+    }
+    // One statement, not a batch: the hub reclaims the endpoint_only booking
+    // rows (manifest delete_cascades) inside this DELETE's own transaction,
+    // and the batch form refuses a declared table rather than skipping the
+    // cascade.
+    if (DB) await dbq("DELETE FROM app_booking_slots__occasions WHERE id = ?", [occasionId]);
+    occasions = occasions.filter(o => o.id !== occasionId);
+    slots = slots.filter(s => s.occasion_id !== occasionId);
+    bookings = bookings.filter(b => b.occasion_id !== occasionId);
+    selectedOccasionId = null;
+    showNotice("Booking sheet deleted.");
+  } catch (e) {
+    if (admissionPaused && occasions.some(o => o.id === occasionId)) {
+      try {
+        if (DB) await dbq("UPDATE app_booking_slots__occasions SET status = ? WHERE id = ?", [previousStatus, occasionId]);
+        occasion.status = previousStatus;
+      } catch { /* Staying closed is safer than reopening after an uncertain failure. */ }
+    }
+    showError(e.message);
+  }
+}
+
+// ── render ──
+function renderMessages() {
+  return `${error ? `<div class="error">${esc(error)}</div>` : ""}${notice ? `<div class="notice">${esc(notice)}</div>` : ""}`;
+}
+function renderTabs() {
+  return `
+    <div class="tabs">
+      <button class="tab ${view === "active" ? "active" : ""}" data-tab="active" data-testid="tab-active">Active</button>
+      <button class="tab ${view === "closed" ? "active" : ""}" data-tab="closed" data-testid="tab-closed">Closed</button>
+    </div>`;
+}
+function renderOccasionCard(occasion) {
+  const t = occasionTotals(occasion.id);
+  const cls = t.complete ? "good" : t.booked ? "info" : "warn";
+  return `
+    <article class="card occasion-card" data-testid="occasion-card" data-occasion-id="${esc(occasion.id)}" data-open-occasion="${esc(occasion.id)}">
+      <div class="head">
+        <div>
+          <div class="title" data-testid="occasion-card-title">${esc(occasion.title)}</div>
+          ${occasion.location ? `<div class="meta">${esc(occasion.location)}</div>` : ""}
+        </div>
+        <span class="pill ${cls}" data-testid="occasion-card-progress">${t.booked}/${t.total} spots booked</span>
+      </div>
+      ${occasion.description ? `<p class="meta">${esc(occasion.description)}</p>` : ""}
+      <div class="progress" aria-hidden="true"><span style="width:${t.pct}%"></span></div>
+    </article>`;
+}
+function renderList() {
+  return `
+    <div class="topbar">
+      <div><h1>Booking Slots</h1><p class="muted tiny">Type in the time slots, share one link, let people book a time.</p></div>
+      ${canManage() ? `<button class="btn" data-testid="new-occasion" data-view-create>New booking sheet</button>` : ""}
+    </div>
+    ${renderMessages()}
+    ${renderTabs()}
+    <div class="section-head"><h2>${view === "closed" ? "Closed" : "Active"} booking sheets</h2><button class="btn btn-ghost btn-sm" data-refresh>Refresh</button></div>
+    ${occasions.length ? `<div class="search-row"><input id="search" class="search-input" type="search" placeholder="Search booking sheets…" aria-label="Search booking sheets" value="${esc(searchQ)}" /></div>` : ""}
+    <section class="stack" id="occasion-list">${renderOccasionList()}</section>`;
+}
+// Owns the filtering and the empty states, so the keystroke handler can refresh
+// the list without repeating how it is derived.
+function renderOccasionList() {
+  const wanted = view === "closed" ? "closed" : "open";
+  const visible = occasions.filter(o => (o.status ?? "open") === wanted);
+  const shown = searchQ ? visible.filter(o => searchMatch(searchQ, searchableFields(o))) : visible;
+  if (shown.length) return shown.map(renderOccasionCard).join("");
+  if (searchQ) return `<div class="card empty">No booking sheets match "${esc(searchQ)}".</div>`;
+  return `<div class="card empty">${wanted === "closed" ? "No closed booking sheets." : "No booking sheets yet."}</div>`;
+}
+
+function renderBookingChip(booking) {
+  const name = booking.guest_name || "Somebody";
+  const detail = [booking.guest_contact, booking.guest_note].filter(Boolean).join(" · ");
+  return `
+    <span class="chip" data-testid="booking-chip" ${booking.guest_note ? `title="${esc(booking.guest_note)}"` : ""}>
+      <span class="avatar" style="background:var(--hub-border,#e5e7eb)">${esc(initial(name))}</span>
+      ${esc(name)}${detail ? ` <span class="muted tiny">· ${esc(detail)}</span>` : ""}
+      <span class="muted tiny">${esc(fmtStamp(booking.created_at))}</span>
+    </span>`;
+}
+
+function renderSlot(slot) {
+  const state = slotState(slot, bookings);
+  const taken = bookingsFor(slot.id);
+  const capacity = Number(slot.capacity || 1);
+
+  let badge = `<span class="pill warn" data-testid="slot-state-open">Open</span>`;
+  if (state === "full") badge = `<span class="pill good" data-testid="slot-state-full">Booked</span>`;
+  else if (state === "closed") badge = `<span class="pill" data-testid="slot-state-closed">Closed</span>`;
+
+  // The booking rows are read-only — `bookings` is endpoint_only, so nothing
+  // in the app may edit or delete a time a visitor booked. The capacity input
+  // is the only control here, and it writes to `slots` (adult_writable).
+  return `
+    <div class="slot" data-testid="slot-card" data-slot-id="${esc(slot.id)}">
+      <div class="slot-top">
+        <div>
+          <div class="slot-name" data-testid="slot-label">${esc(timeLabel(slot.start_time, slot.end_time) || slot.label || slot.slot_date)}</div>
+        </div>
+        <span class="pill ${state === "full" ? "good" : "info"}" data-testid="slot-tally">${taken.length}/${capacity}</span>
+        ${badge}
+      </div>
+      ${taken.length ? `<div class="chips" data-testid="slot-bookings">${taken.map(renderBookingChip).join("")}</div>` : ""}
+      <div class="actions">
+        ${canManage() ? `
+          <label class="muted tiny slot-cap">
+            Spots
+            <input type="number" min="1" value="${esc(String(capacity))}"
+                   data-testid="slot-capacity" data-capacity="${esc(slot.id)}"
+                   aria-label="Spots for ${esc(slot.label)}" />
+          </label>` : ""}
+        ${canManage() ? `<button class="btn btn-ghost btn-sm" data-testid="slot-toggle" data-toggle="${esc(slot.id)}">${slot.status === "closed" ? "Reopen" : "Close"}</button>` : ""}
+        ${canManage() ? `<button class="btn btn-quiet-danger" data-testid="slot-remove" data-remove-slot="${esc(slot.id)}">Remove</button>` : ""}
+      </div>
+    </div>`;
+}
+
+// Slots grouped under their date, since a sheet often holds several dates and
+// every slot's own label repeating the date would be noise.
+function renderSlotGroups(occasionId) {
+  const own = occasionSlots(occasionId);
+  if (!own.length) return `<div class="empty">No slots yet — add the times people can book.</div>`;
+  let out = "", lastDate = null;
+  for (const slot of own) {
+    if (slot.slot_date !== lastDate) {
+      lastDate = slot.slot_date;
+      out += `<div class="slot-day" data-testid="slot-day">${esc(dateLabel(slot.slot_date))}</div>`;
+    }
+    out += renderSlot(slot);
+  }
+  return out;
+}
+
+function renderDetail() {
+  const occasion = selectedOccasion();
+  if (!occasion) return renderList();
+  const t = occasionTotals(occasion.id);
+  const closed = (occasion.status ?? "open") === "closed";
+  return `
+    <button class="btn btn-ghost btn-sm back" data-back>Back</button>
+    ${renderMessages()}
+    <section class="card stack">
+      <div class="head">
+        <div>
+          <h1 data-testid="occasion-title">${esc(occasion.title)}</h1>
+          ${occasion.location ? `<p class="muted">${esc(occasion.location)}</p>` : ""}
+        </div>
+        <div class="tools">
+          <span class="pill ${t.complete ? "good" : "info"}" data-testid="occasion-progress">${t.booked}/${t.total} spots booked</span>
+          ${closed ? `<span class="pill" data-testid="occasion-closed">Closed</span>` : ""}
+          ${share.enabled && canManage() && !closed ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-share" data-share="${esc(occasion.id)}">🔗 Share</button>` : ""}
+          ${canManage() ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-edit" data-edit="${esc(occasion.id)}">Edit</button>` : ""}
+          ${canManage() ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-status" data-set-status="${esc(occasion.id)}">${closed ? "Reopen" : "Close"}</button>` : ""}
+          ${canManage() ? `<button class="btn btn-quiet-danger" data-testid="occasion-delete" data-delete-occasion="${esc(occasion.id)}">Delete</button>` : ""}
+        </div>
+      </div>
+      ${occasion.description ? `<p>${esc(occasion.description)}</p>` : ""}
+    </section>
+    <section class="card" data-testid="slot-list">
+      <div class="section-head"><h2>Time slots</h2><button class="btn btn-ghost btn-sm" data-refresh>Refresh</button></div>
+      ${renderSlotGroups(occasion.id)}
+      ${canManage() ? `
+        <form class="add-slots" id="add-slots-form">
+          <div class="field"><label for="s-date">Date</label><input id="s-date" name="slot_date" type="date" data-testid="field-slot-date" required /></div>
+          <div class="field"><label for="s-from">From</label><input id="s-from" name="start_time" type="time" data-testid="field-slot-from" required /></div>
+          <div class="field"><label for="s-to">To</label><input id="s-to" name="end_time" type="time" data-testid="field-slot-to" /></div>
+          <div class="field"><label for="s-every">Every (min)</label><input id="s-every" name="every_mins" type="number" min="5" step="5" placeholder="—" data-testid="field-slot-every" /></div>
+          <div class="field"><label for="s-cap">Spots</label><input id="s-cap" name="capacity" type="number" min="1" value="1" data-testid="field-slot-capacity" /></div>
+          <button class="btn btn-sm" type="submit" data-testid="add-slots">Add</button>
+        </form>
+        <p class="muted tiny" style="margin-top:6px">Set "Every" to split the window into a run of slots — 2:00 to 5:00 every 15 minutes is twelve slots.</p>` : ""}
+    </section>`;
+}
+
+function renderForm() {
+  const occasion = editingOccasionId ? occasions.find(o => o.id === editingOccasionId) : null;
+  const v = (k) => esc(occasion?.[k] ?? "");
+  return `
+    <button class="btn btn-ghost btn-sm back" data-view-active>Back</button>
+    <div class="topbar"><h1>${occasion ? "Edit booking sheet" : "New booking sheet"}</h1></div>
+    ${renderMessages()}
+    <form class="card form" id="occasion-form">
+      <div class="grid two">
+        <div class="field"><label for="f-title">Title</label><input id="f-title" name="title" data-testid="field-title" value="${v("title")}" placeholder="Parent-teacher conferences" required /></div>
+        <div class="field"><label for="f-location">Where</label><input id="f-location" name="location" data-testid="field-location" value="${v("location")}" placeholder="Room 12" /></div>
+      </div>
+      <div class="field"><label for="f-desc">About</label><textarea id="f-desc" name="description" data-testid="field-description" placeholder="What this is, and anything people should know before booking.">${v("description")}</textarea></div>
+      <div class="actions">
+        <button class="btn" type="submit" data-testid="submit-occasion">${occasion ? "Save changes" : "Open booking sheet"}</button>
+      </div>
+    </form>`;
+}
+
+// ── modal ──
+let modalEl = null;
+function closeModal() { modalEl?.remove(); modalEl = null; }
+// One modal element for the whole app, so opening one dialog over another
+// replaces it rather than stacking two backdrops.
+function openModal(inner, { width = 400, testid = "modal" } = {}) {
+  closeModal();
+  modalEl = document.createElement("div");
+  modalEl.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;";
+  modalEl.innerHTML = `<div class="card" data-testid="${testid}" style="max-width:${width}px;width:100%;max-height:90vh;overflow:auto;">${inner}</div>`;
+  modalEl.addEventListener("click", e => { if (e.target === modalEl) closeModal(); });
+  document.body.appendChild(modalEl);
+  return modalEl;
+}
+
+// ── share links ──
+let _shareLinks = [];
+let _shareEntitled = false;
+
+async function openShareModal(occasionId) {
+  const occasion = occasions.find(o => o.id === occasionId);
+  if (!occasion) return;
+  let status;
+  try {
+    status = await share.status();
+  } catch (err) {
+    hubAlert("Couldn't load share links", { description: err.message });
+    return;
+  }
+  _shareLinks = status.links;
+  _shareEntitled = status.entitled;
+  const active = _shareLinks.filter(l =>
+    l.itemId === occasionId && !l.revokedAt && new Date(l.expiresAt) > new Date());
+
+  const rows = active.map(l => `
+    <div class="share-row" data-testid="share-link" data-link-id="${esc(l.id)}">
+      <div style="flex:1;min-width:0">
+        <input class="share-url" readonly value="${esc(l.url)}" onclick="this.select()" />
+        <div class="muted tiny" style="margin-top:3px">
+          Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}${
+            l.writable ? ` · ${l.submissionCount} booking${l.submissionCount === 1 ? "" : "s"} · ✍️ collects bookings` : ""}${
+            l.hasPassword ? " · 🔒 password" : ""}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-share-copy="${esc(l.id)}">Copy</button>
+      <button class="btn btn-danger btn-sm" data-share-revoke="${esc(l.id)}" data-occasion-id="${esc(occasionId)}">Revoke</button>
+    </div>`).join("");
+
+  // The slot select on the public form is `required`, so an occasion with no
+  // open slot has nothing a visitor can pick and the form fails closed. That
+  // is right when everything is booked and wrong when nobody laid out the
+  // slots yet — either way the organizer should hear it here, not from a
+  // confused parent.
+  const open = openForForm(occasionId).length;
+  const warning = open === 0
+    ? `<div class="warn-box" data-testid="share-no-slots">No slots are open right now, so nobody can book through the link. Add a slot, or reopen one, first.</div>`
+    : "";
+
+  // Premium (`sharing`) controls: a writable link, a password, a long expiry.
+  // A read-only link still shows the occasion; collecting bookings is the
+  // premium half.
+  const premiumControls = _shareEntitled ? `
+    <label class="share-opt">
+      <input type="checkbox" id="share-writable" data-testid="share-writable" /> Let people book a time through the link
+    </label>
+    <input id="share-password" type="text" placeholder="Optional password (min 4 chars)" autocomplete="off" />
+  ` : "";
+  const shareDescription = _shareEntitled
+    ? "Anyone with the link can see the sheet. Turn on booking below if they should be able to claim an open time."
+    : "Anyone with the link can see the sheet. This link is read-only; collecting bookings requires premium sharing.";
+
+  openModal(`
+    <h2 style="margin-bottom:2px;">Share "${esc(occasion.title)}"</h2>
+    <p class="muted tiny" style="margin-bottom:10px;">
+      ${esc(shareDescription)} Links expire automatically.
+    </p>
+    ${warning}
+    ${rows || `<p class="muted tiny" style="padding:8px 0">No active links yet.</p>`}
+    <label class="share-opt">
+      <input type="checkbox" data-testid="share-show-bookings" data-show-bookings="${esc(occasionId)}"
+             ${occasion.show_bookings === "yes" ? "checked" : ""} />
+      Show who's booked on the public page
+    </label>
+    ${premiumControls}
+    <div class="share-create">
+      <select id="share-expiry">
+        <option value="24">1 day</option>
+        <option value="168" selected>7 days</option>
+        <option value="720">30 days</option>
+        ${_shareEntitled ? `<option value="8760">1 year</option>` : ""}
+      </select>
+      <button class="btn btn-sm" data-testid="share-create" data-share-create="${esc(occasionId)}">Create link</button>
+    </div>
+    <div class="actions" style="margin-top:14px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" data-modal-cancel>Close</button>
+    </div>`, { width: 520, testid: "share-modal" });
+}
+
+async function createShareLink(occasionId) {
+  const occasion = occasions.find(o => o.id === occasionId);
+  const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
+  const writable = !!document.getElementById("share-writable")?.checked;
+  const password = document.getElementById("share-password")?.value?.trim() || undefined;
+  const btn = modalEl?.querySelector("[data-share-create]");
+  if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+  try {
+    const link = await share.create("occasion", occasionId, { expiresInHours: hours, label: occasion?.title, writable, password });
+    try { await navigator.clipboard.writeText(link.url); } catch { /* the re-render shows the url to copy */ }
+    await openShareModal(occasionId);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
+    hubAlert("Couldn't create share link", { description: err.message });
+  }
+}
+
+async function copyShareLink(id) {
+  const link = _shareLinks.find(l => l.id === id);
+  if (!link) return;
+  try { await navigator.clipboard.writeText(link.url); }
+  catch { hubAlert("Couldn't copy — select the link text and copy it manually."); }
+}
+
+async function revokeShareLink(id, occasionId) {
+  if (!await hubConfirm({ message: "Revoke this share link?", description: "Anyone using it will immediately lose access.", confirmLabel: "Revoke" })) return;
+  try { await share.revoke(id); await openShareModal(occasionId); }
+  catch (err) { hubAlert("Couldn't revoke share link", { description: err.message }); }
+}
+
+function render() {
+  const root = document.getElementById("root");
+  root.className = "app";
+  if (view === "create") root.innerHTML = renderForm();
+  else if (selectedOccasionId) root.innerHTML = renderDetail();
+  else root.innerHTML = renderList();
+}
+
+// ── events ──
+document.addEventListener("click", (event) => {
+  const t = event.target.closest("button, [data-open-occasion]");
+  if (!t) return;
+  const open = t.getAttribute("data-open-occasion");
+  if (open) { selectedOccasionId = open; clearMessages(); render(); return; }
+  if (t.matches("[data-back], [data-view-active]")) { selectedOccasionId = null; editingOccasionId = null; view = "active"; clearMessages(); render(); return; }
+  if (t.matches("[data-view-create]")) { view = "create"; editingOccasionId = null; selectedOccasionId = null; clearMessages(); render(); return; }
+  if (t.hasAttribute("data-tab")) { view = t.getAttribute("data-tab"); selectedOccasionId = null; clearMessages(); render(); return; }
+  if (t.matches("[data-refresh]")) { refresh(); return; }
+  if (t.hasAttribute("data-edit")) { editingOccasionId = t.getAttribute("data-edit"); view = "create"; clearMessages(); render(); return; }
+  if (t.matches("[data-modal-cancel]")) { closeModal(); return; }
+  if (t.hasAttribute("data-toggle")) { toggleSlotClosed(t.getAttribute("data-toggle")); return; }
+  if (t.hasAttribute("data-remove-slot")) { removeSlot(t.getAttribute("data-remove-slot")); return; }
+  if (t.hasAttribute("data-set-status")) {
+    const id = t.getAttribute("data-set-status");
+    const occasion = occasions.find(x => x.id === id);
+    setOccasionStatus(id, (occasion?.status ?? "open") === "closed" ? "open" : "closed");
+    return;
+  }
+  if (t.hasAttribute("data-delete-occasion")) { deleteOccasion(t.getAttribute("data-delete-occasion")); return; }
+  if (t.hasAttribute("data-share")) { openShareModal(t.getAttribute("data-share")); return; }
+  if (t.hasAttribute("data-share-create")) { createShareLink(t.getAttribute("data-share-create")); return; }
+  if (t.hasAttribute("data-share-copy")) { copyShareLink(t.getAttribute("data-share-copy")); return; }
+  if (t.hasAttribute("data-share-revoke")) { revokeShareLink(t.getAttribute("data-share-revoke"), t.getAttribute("data-occasion-id")); return; }
+});
+
+// Re-render only the list on each keystroke so the search box keeps focus.
+document.addEventListener("input", (event) => {
+  if (event.target.id !== "search") return;
+  searchQ = event.target.value;
+  const el = document.getElementById("occasion-list");
+  if (el) el.innerHTML = renderOccasionList();
+});
+
+// "change", not "input": the capacity write re-renders, and a re-render on
+// every keystroke would tear the field out from under the cursor.
+document.addEventListener("change", (event) => {
+  const cap = event.target.closest("[data-capacity]");
+  if (cap) { setCapacity(cap.getAttribute("data-capacity"), cap.value); return; }
+  const show = event.target.closest("[data-show-bookings]");
+  if (show) { setShowBookings(show.getAttribute("data-show-bookings"), show.checked); return; }
+});
+
+document.addEventListener("submit", (event) => {
+  if (event.target.id === "occasion-form") { event.preventDefault(); saveOccasion(event.target); return; }
+  if (event.target.id === "add-slots-form") { event.preventDefault(); addSlots(event.target); return; }
+});
+
+refresh({ deepLink: true });
+</script>
+</body>
+</html>

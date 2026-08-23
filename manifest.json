@@ -1,0 +1,240 @@
+{
+  "id": "booking-slots",
+  "name": "Booking Slots",
+  "version": "1.0.0",
+  "description": "A sign-up sheet with time slots — parent-teacher conferences, pickup windows, tryouts. Type in the slots, share one link, and people book a time with their name. No account needed.",
+  "entrypoint": "index.html",
+  "runtime": "static",
+  "category": "community",
+  "tags": [
+    "bookings",
+    "appointments",
+    "time-slots",
+    "sign-up",
+    "scheduling",
+    "sharing"
+  ],
+  "icon": "🕑",
+  "nav": { "label": "Booking Slots" },
+  "contexts": [
+    "household",
+    "shared_space"
+  ],
+  "data_access": {
+    "reads": [
+      "family.members"
+    ],
+    "writes": []
+  },
+  "permissions": {
+    "default_audience": "everyone",
+    "requires_approval": false
+  },
+  "storage": "db",
+
+  "db_plaintext_columns": [
+    "capacity",
+    "guest_name",
+    "guest_contact",
+    "guest_note",
+    "show_bookings",
+    "start_time"
+  ],
+
+  "row_policies": {
+    "occasions": {
+      "kind": "adult_writable"
+    },
+    "slots": {
+      "kind": "adult_writable"
+    },
+    "bookings": {
+      "kind": "endpoint_only",
+      "read": "everyone",
+      "column_read_acls": {
+        "guest_contact": { "visible_to": ["adult"] },
+        "guest_note": { "visible_to": ["adult"] }
+      }
+    }
+  },
+
+  "shareable": {
+    "occasion": {
+      "table": "occasions",
+      "title_column": "title",
+      "columns": [
+        { "column": "location", "label": "Where" },
+        { "column": "description", "label": "About", "format": "multiline" }
+      ],
+      "visible_where": { "column": "status", "values": ["open"] },
+      "aggregates": [
+        {
+          "label": "Bookings through this link",
+          "table": "bookings",
+          "fk_column": "occasion_id",
+          "op": "count"
+        },
+        {
+          "label": "Times already taken",
+          "table": "bookings",
+          "fk_column": "occasion_id",
+          "op": "list",
+          "value_column": "slot_id",
+          "lookup": { "table": "slots", "label_column": "label" },
+          "max_items": 100
+        }
+      ],
+      "feed": {
+        "label": "Who's booked",
+        "table": "bookings",
+        "fk_column": "occasion_id",
+        "parent_where": { "column": "show_bookings", "values": ["yes"] },
+        "columns": [
+          { "column": "guest_name", "label": "Name", "role": "heading" },
+          { "column": "created_at", "label": "Booked", "format": "datetime", "role": "timestamp" }
+        ],
+        "order_column": "created_at",
+        "order": "oldest",
+        "max_items": 200,
+        "empty_text": "Nobody has booked a time yet."
+      },
+      "submit": {
+        "table": "bookings",
+        "fk_column": "occasion_id",
+        "fields": [
+          {
+            "column": "guest_name",
+            "label": "Your name",
+            "type": "text",
+            "required": true,
+            "max_length": 80
+          },
+          {
+            "column": "slot_id",
+            "label": "Pick a time",
+            "type": "select",
+            "required": true,
+            "values_from": {
+              "table": "slots",
+              "fk_column": "occasion_id",
+              "id_column": "id",
+              "label_column": "label",
+              "capacity_column": "capacity",
+              "where": [
+                { "column": "status", "values": ["open"] }
+              ]
+            }
+          },
+          {
+            "column": "guest_contact",
+            "label": "How can we reach you? (phone or email)",
+            "type": "text",
+            "required": false,
+            "max_length": 120
+          },
+          {
+            "column": "guest_note",
+            "label": "Anything else?",
+            "type": "text",
+            "required": false,
+            "max_length": 200
+          }
+        ],
+        "max_submissions": 200,
+        "event": "booking_slots.slot_booked"
+      }
+    }
+  },
+
+  "automation_actions": {
+    "open_occasion": {
+      "title": "Open a booking sheet",
+      "description": "Open a booking sheet for something another app already knows is coming — a conference day, a registration window, tryouts on the calendar. Only the occasion itself is opened; which time slots to offer is a human decision, so an adult lays out the slots before sharing the link.",
+      "params": {
+        "title": { "type": "text", "label": "Occasion title", "required": true },
+        "location": { "type": "text", "label": "Where", "default": "" },
+        "description": { "type": "text", "label": "About", "default": "" }
+      },
+      "dedupe": { "table": "occasions", "column": "source_event_id" },
+      "steps": [
+        {
+          "op": "insert",
+          "table": "occasions",
+          "values": {
+            "id": "$uuid",
+            "title": ":title",
+            "location": ":location",
+            "description": ":description",
+            "show_bookings": "no",
+            "status": "open",
+            "created_by": "automation",
+            "created_by_name": "Automation",
+            "created_at": "$now",
+            "source_event_id": "$event_id"
+          }
+        }
+      ]
+    }
+  },
+
+  "suggested_automations": [
+    {
+      "title": "Open a booking sheet when a date lands on the calendar",
+      "description": "A conference day or a tryout goes on the calendar weeks before anyone thinks to collect sign-ups. This opens the sheet the same day, so it is waiting when someone does.",
+      "trigger_event": "calendar.event_created",
+      "target_app_id": "booking-slots",
+      "action_id": "open_occasion",
+      "param_map": {
+        "title": { "kind": "payload_field", "value": "title" },
+        "description": { "kind": "const", "value": "Add the time slots people can book, then share the link." }
+      }
+    }
+  ],
+
+  "publishes": [
+    "booking_slots.occasion_opened"
+  ],
+  "publish_acls": {
+    "booking_slots.occasion_opened": { "require_role": "adult" }
+  },
+
+  "member_references": {
+    "occasions": { "column": "created_by", "on_removed": "keep" }
+  },
+
+  "delete_cascades": {
+    "occasions": [
+      { "table": "bookings", "foreign_key": "occasion_id" },
+      { "table": "slots", "foreign_key": "occasion_id" }
+    ],
+    "slots": [
+      { "table": "bookings", "foreign_key": "slot_id" }
+    ]
+  },
+
+  "agenda": {
+    "kind": "event",
+    "label": "Booking Slots",
+    "source": {
+      "kind": "sql",
+      "query": "SELECT s.id AS id, s.occasion_title AS title, CASE WHEN s.start_time != '' THEN s.slot_date || 'T' || s.start_time ELSE s.slot_date END AS when_at, NULLIF(s.label, '') AS subtitle FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'open' WHERE s.slot_date = :today AND s.status != 'closed' ORDER BY s.start_time LIMIT 10"
+    }
+  },
+
+  "glance": {
+    "source": {
+      "kind": "sql",
+      "query": "SELECT s.occasion_title AS title, NULLIF(s.label, '') AS subtitle, s.slot_date AS at FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'open' WHERE s.status = 'open' AND s.slot_date >= :today ORDER BY s.slot_date, s.start_time LIMIT 3"
+    },
+    "display": {
+      "template": "list",
+      "title": "title",
+      "subtitle": "subtitle",
+      "when": "at"
+    }
+  },
+
+  "resource_limits": {
+    "max_db_bytes": 52428800
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "scenarios": [
+    {
+      "name": "booking identities are readable by everyone, sensitive details only by adults, and rows writable by nobody",
+      "members": { "host": "adult", "kid": "child" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('oc1', ?, ?, '', 'no', 'open', ?, 'Host', '2026-02-20T00:00:00Z')",
+          "params": ["Parent-teacher conferences", "Room 12", "{{host}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl1', 'oc1', '2026-03-03', '14:00', '14:15', ?, ?, 1, 'open', '2026-02-20T00:00:00Z')",
+          "params": ["Tue, Mar 3 · 2:00–2:15 PM", "Parent-teacher conferences"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES ('b1', 'oc1', 'sl1', 'Marta Okafor', '555-0114', 'May be 2 min late', '2026-02-21 17:04:00'), ('b2', 'oc1', 'sl1', 'Ken Ito', '', '', '2026-02-22 09:00:00')"
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id, guest_name, guest_contact, guest_note FROM app_booking_slots__bookings WHERE occasion_id = ?",
+          "params": ["oc1"],
+          "expect": { "status": 200, "rowCount": 2, "rowsContain": [{ "guest_name": "Marta Okafor", "guest_contact": null, "guest_note": null }] }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id, guest_name, guest_contact, guest_note FROM app_booking_slots__bookings WHERE id = ?",
+          "params": ["b1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "guest_name": "Marta Okafor", "guest_contact": "555-0114", "guest_note": "May be 2 min late" }] }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "DELETE FROM app_booking_slots__bookings WHERE id = ?",
+          "params": ["b1"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__bookings SET guest_name = ? WHERE id = ?",
+          "params": ["Edited", "b1"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, 'oc1', 'sl1', ?, '', '', '2026-02-23 09:00:00')",
+          "params": ["b3", "Forged"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_booking_slots__bookings WHERE occasion_id = ?",
+          "params": ["oc1"],
+          "expect": { "status": 200, "rowCount": 2 }
+        }
+      ]
+    },
+    {
+      "name": "only adults lay out slots or resize one",
+      "members": { "host": "adult", "kid": "child" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('oc1', ?, '', '', 'no', 'open', ?, 'Host', '2026-02-20T00:00:00Z')",
+          "params": ["Coach tryouts", "{{host}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl1', 'oc1', '2026-03-03', '09:00', '09:20', ?, ?, 2, 'open', '2026-02-20T00:00:00Z')",
+          "params": ["Tue, Mar 3 · 9:00–9:20 AM", "Coach tryouts"]
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "UPDATE app_booking_slots__slots SET capacity = 9 WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl-kid', 'oc1', '2026-03-03', '09:20', '09:40', ?, ?, 1, 'open', '2026-02-20T00:00:00Z')",
+          "params": ["Tue, Mar 3 · 9:20–9:40 AM", "Coach tryouts"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id, capacity FROM app_booking_slots__slots WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "capacity": 2 }] }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__slots SET capacity = 3 WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES ('b1', 'oc1', 'sl1', 'One', '', '', datetime('now')), ('b2', 'oc1', 'sl1', 'Two', '', '', datetime('now'))"
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__slots SET capacity = ? WHERE id = ? AND ? >= (SELECT COUNT(*) FROM app_booking_slots__bookings WHERE slot_id = ?)",
+          "params": [1, "sl1", 1, "sl1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id, capacity, status FROM app_booking_slots__slots WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "capacity": 3, "status": "open" }] }
+        }
+      ]
+    },
+    {
+      "name": "closing a slot shuts the same door the public form reads",
+      "members": { "host": "adult" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('oc1', ?, '', '', 'no', 'open', ?, 'Host', '2026-02-20T00:00:00Z')",
+          "params": ["Driveway-sale pickups", "{{host}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl1', 'oc1', '2026-03-01', '10:00', '10:30', ?, ?, 1, 'open', '2026-02-20T00:00:00Z'), ('sl2', 'oc1', '2026-03-01', '10:30', '11:00', ?, ?, 1, 'open', '2026-02-20T00:00:00Z')",
+          "params": ["Sun, Mar 1 · 10:00–10:30 AM", "Driveway-sale pickups", "Sun, Mar 1 · 10:30–11:00 AM", "Driveway-sale pickups"]
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__slots SET status = 'closed' WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id FROM app_booking_slots__slots WHERE occasion_id = ? AND status = 'open'",
+          "params": ["oc1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "sl2" }] }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__slots SET status = 'open' WHERE id = ?",
+          "params": ["sl1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id FROM app_booking_slots__slots WHERE occasion_id = ? AND status = 'open'",
+          "params": ["oc1"],
+          "expect": { "status": 200, "rowCount": 2 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "UPDATE app_booking_slots__occasions SET status = 'closed' WHERE id = ?",
+          "params": ["oc1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id FROM app_booking_slots__occasions WHERE id = ? AND status = 'open'",
+          "params": ["oc1"],
+          "expect": { "status": 200, "rowCount": 0 }
+        }
+      ]
+    },
+    {
+      "name": "an automation-opened occasion is owned by nobody, hides bookings, and has no slots yet",
+      "members": { "host": "adult" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at, source_event_id) VALUES ('oc-auto', ?, '', '', 'no', 'open', 'automation', 'Automation', '2026-02-20T00:00:00Z', 'ev-src-1')",
+          "params": ["Conference day"]
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id, created_by, status, show_bookings FROM app_booking_slots__occasions WHERE id = ?",
+          "params": ["oc-auto"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "created_by": "automation", "status": "open", "show_bookings": "no" }] }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id FROM app_booking_slots__slots WHERE occasion_id = ?",
+          "params": ["oc-auto"],
+          "expect": { "status": 200, "rowCount": 0 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl1', 'oc-auto', '2026-03-03', '14:00', '14:15', ?, ?, 1, 'open', '2026-02-21T00:00:00Z')",
+          "params": ["Tue, Mar 3 · 2:00–2:15 PM", "Conference day"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT id, capacity FROM app_booking_slots__slots WHERE occasion_id = ? AND status = 'open'",
+          "params": ["oc-auto"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "capacity": 1 }] }
+        }
+      ]
+    }
+  ]
+}
