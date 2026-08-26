@@ -31,6 +31,10 @@
     "requires_approval": false
   },
   "storage": "db",
+  "preload": {
+    "occasions": {"sql": "SELECT * FROM app_booking_slots__occasions ORDER BY created_at ASC, id ASC"},
+    "slots": {"sql": "SELECT * FROM app_booking_slots__slots ORDER BY slot_date ASC, start_time ASC, created_at ASC, id ASC"}
+  },
 
   "db_plaintext_columns": [
     "capacity",
