@@ -154,7 +154,9 @@ describe("index.html call sites", () => {
     // handleDeepLink() must not run inside refresh(), or pressing Refresh
     // after backing out of a deep-linked occasion throws the organizer
     // straight back into it (the meal-train bug).
-    expect(html).toContain("if (deepLink) handleDeepLink();");
+    // Awaited since the archive split: a ?occasionId pointing at a CLOSED
+    // sheet now has to pull the closed set before it can select it.
+    expect(html).toContain("if (deepLink) await handleDeepLink();");
     expect(html).toContain("refresh({ deepLink: true })");
     expect(html.match(/handleDeepLink\(\)/g)).toHaveLength(2); // the guarded call + the declaration
   });
@@ -170,8 +172,11 @@ describe("index.html call sites", () => {
   it("paginates every initial table read below the Hub response ceiling", () => {
     expect(html).toContain("const DB_PAGE_SIZE = 1000");
     expect(html).toContain("async function dbAll(sql, params = [])");
-    expect(html).toContain('dbAll("SELECT * FROM app_booking_slots__bookings');
+    // Bookings are scoped to their parent sheet's status now, so the read is a
+    // JOIN — but it must still go through dbAll (paged), never a bare dbq.
+    expect(html).toContain('dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN');
     expect(html).not.toContain('dbq("SELECT * FROM app_booking_slots__bookings');
+    expect(html).not.toContain('dbq("SELECT b.* FROM app_booking_slots__bookings');
   });
 
   it("rejects slot runs that cannot fit in one atomic batch", () => {

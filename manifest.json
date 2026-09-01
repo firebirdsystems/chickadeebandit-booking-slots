@@ -32,8 +32,8 @@
   },
   "storage": "db",
   "preload": {
-    "occasions": {"sql": "SELECT * FROM app_booking_slots__occasions ORDER BY created_at ASC, id ASC"},
-    "slots": {"sql": "SELECT * FROM app_booking_slots__slots ORDER BY slot_date ASC, start_time ASC, created_at ASC, id ASC"}
+    "occasions": {"sql": "SELECT * FROM app_booking_slots__occasions WHERE status = 'open' ORDER BY created_at ASC, id ASC LIMIT 1000 OFFSET 0"},
+    "slots": {"sql": "SELECT s.* FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'open' ORDER BY s.slot_date ASC, s.start_time ASC, s.created_at ASC, s.id ASC LIMIT 1000 OFFSET 0"}
   },
 
   "db_plaintext_columns": [

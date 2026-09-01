@@ -17,9 +17,30 @@ describe("manifest.preload mirrors the app's first-render reads", () => {
   const body = norm(html);
   const prefix = `app_${manifest.id.replace(/-/g, "_")}__`;
 
-  it("declares statements the app posts, byte-for-byte after whitespace collapse", () => {
+  // Every first-render read here goes through dbAll(), which pages: the request
+  // it actually posts is `<sql> LIMIT <DB_PAGE_SIZE> OFFSET 0`, not `<sql>`.
+  //
+  // This test used to ask only whether the declared text APPEARED in the source,
+  // and a declared statement is trivially a substring of itself-plus-a-LIMIT —
+  // so it passed for a long time while both preloads declared the un-paged text
+  // and therefore never answered a single request. The hub ran them server-side
+  // on every launch and the app fetched everything over the network anyway.
+  // Pin the whole composition instead of a prefix of it.
+  const PAGE_SIZE = Number(/const DB_PAGE_SIZE = (\d+)/.exec(html)?.[1]);
+
+  it("agrees with dbAll's page size", () => {
+    expect(PAGE_SIZE, "DB_PAGE_SIZE not found in src/index.html").toBeGreaterThan(0);
+  });
+
+  it("declares exactly the paged statement the app posts for the first page", () => {
+    const suffix = ` LIMIT ${PAGE_SIZE} OFFSET 0`;
     for (const [name, { sql }] of Object.entries(manifest.preload)) {
-      expect(body.includes(norm(sql)), `preload.${name} is not the text src/index.html posts`).toBe(true);
+      const declared = norm(sql);
+      expect(declared.endsWith(suffix), `preload.${name} must be a dbAll first page (…${suffix})`).toBe(true);
+      // The base statement has to appear as a whole dbAll() argument, not merely
+      // somewhere in the file — that is what makes this a byte-for-byte check.
+      const base = declared.slice(0, -suffix.length);
+      expect(body.includes(`dbAll("${base}")`), `preload.${name} is not a statement src/index.html posts`).toBe(true);
     }
   });
 

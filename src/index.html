@@ -220,10 +220,26 @@ async function dbBatch(statements) {
   if (json.error) throw new Error(json.error);
   return json;
 }
+// LIMIT/OFFSET are inlined as integers rather than bound as params, and that is
+// load-bearing in two ways:
+//
+//  1. The hub's manifest ADMISSION validator cannot parse `LIMIT ?` / `OFFSET ?`
+//     and rejects the manifest outright, so a paged statement can only be
+//     declared in manifest.preload in this form. (The runtime row-policy
+//     rewriter handles both, which is why the parameterised version worked.)
+//  2. A preload answers only a request whose text matches the declared
+//     statement. While this appended `LIMIT ? OFFSET ?`, the text posted here
+//     never equalled the declared preload, so BOTH preloads silently never
+//     answered — the hub ran them server-side on every launch and the app then
+//     fetched everything over the network anyway. The app's preload test did
+//     not catch it because it asks whether the declared SQL appears in this
+//     file, and the declared prefix does appear.
+//
+// The values are internal constants, never user input.
 async function dbAll(sql, params = []) {
   const rows = [];
   for (let offset = 0; ; offset += DB_PAGE_SIZE) {
-    const page = await dbq(`${sql} LIMIT ? OFFSET ?`, [...params, DB_PAGE_SIZE, offset]);
+    const page = await dbq(`${sql} LIMIT ${DB_PAGE_SIZE} OFFSET ${offset}`, params);
     rows.push(...page.rows);
     if (page.rows.length < DB_PAGE_SIZE) return rows;
   }
@@ -273,16 +289,57 @@ function seedDemo() {
 
 async function loadData() {
   if (!DB) { seedDemo(); return; }
+  // Only the OPEN sheets, their slots and their bookings. The app lands on the
+  // Active tab and every one of these runs on each launch, so a household with
+  // years of finished sign-up sheets was reading all of them to draw a screen
+  // that shows none. Closed sheets load when that tab is opened (loadClosed);
+  // the tabs carry no counts, so nothing on screen misstates the archive.
+  //
+  // The children are scoped with a JOIN, not `occasion_id IN (SELECT ...)`: the
+  // row-policy rewriter fails closed on a governed table named only inside a
+  // subquery, while a joined table keeps its own policy applied. The per-sheet
+  // "n/m spots booked" tally is computed from these rows, so they have to
+  // arrive with their sheet rather than lag behind it.
   const [occasionRows, slotRows, bookingRows] = await Promise.all([
-    dbAll("SELECT * FROM app_booking_slots__occasions ORDER BY created_at ASC, id ASC"),
-    dbAll("SELECT * FROM app_booking_slots__slots ORDER BY slot_date ASC, start_time ASC, created_at ASC, id ASC"),
+    dbAll("SELECT * FROM app_booking_slots__occasions WHERE status = 'open' ORDER BY created_at ASC, id ASC"),
+    dbAll("SELECT s.* FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'open' ORDER BY s.slot_date ASC, s.start_time ASC, s.created_at ASC, s.id ASC"),
     // Same order the public feed renders in (manifest shareable.occasion.feed,
     // order_column created_at / oldest), so the two views agree.
-    dbAll("SELECT * FROM app_booking_slots__bookings ORDER BY created_at ASC, id ASC"),
+    dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN app_booking_slots__occasions o ON o.id = b.occasion_id AND o.status = 'open' ORDER BY b.created_at ASC, b.id ASC"),
   ]);
   occasions = occasionRows;
   slots = slotRows;
   bookings = bookingRows;
+  // A refresh rebuilds the open set, dropping anything the Closed tab had
+  // already pulled. Pull it again rather than leaving that tab silently empty.
+  if (closedLoaded) { closedLoaded = false; closedPromise = null; await loadClosed(); }
+}
+
+// The closed archive, fetched once on demand and merged into the same arrays.
+// The promise is the guard so a double tap cannot start two reads; a failure
+// clears it so the next attempt retries. Merges dedup by id — a sheet closed in
+// this session is already present.
+let closedLoaded = false;
+let closedPromise = null;
+function loadClosed() {
+  if (!DB || closedLoaded) return Promise.resolve();
+  closedPromise ??= Promise.all([
+    dbAll("SELECT * FROM app_booking_slots__occasions WHERE status = 'closed' ORDER BY created_at ASC, id ASC"),
+    dbAll("SELECT s.* FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'closed' ORDER BY s.slot_date ASC, s.start_time ASC, s.created_at ASC, s.id ASC"),
+    dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN app_booking_slots__occasions o ON o.id = b.occasion_id AND o.status = 'closed' ORDER BY b.created_at ASC, b.id ASC"),
+  ])
+    .then(([occasionRows, slotRows, bookingRows]) => {
+      const merge = (have, incoming) => {
+        const seen = new Set(have.map(r => r.id));
+        return [...have, ...incoming.filter(r => !seen.has(r.id))];
+      };
+      occasions = merge(occasions, occasionRows);
+      slots = merge(slots, slotRows);
+      bookings = merge(bookings, bookingRows);
+      closedLoaded = true;
+    })
+    .catch((e) => { closedPromise = null; throw e; });
+  return closedPromise;
 }
 
 // `deepLink` is honoured on the FIRST load only. Re-applying ?occasionId on
@@ -293,13 +350,23 @@ async function refresh({ deepLink = false } = {}) {
   try {
     await Promise.all([loadMembers(), loadData()]);
     if (selectedOccasionId && !occasions.some(o => o.id === selectedOccasionId)) selectedOccasionId = null;
-    if (deepLink) handleDeepLink();
+    if (deepLink) await handleDeepLink();
     render();
   } catch (e) { error = e.message; render(); }
 }
-function handleDeepLink() {
+async function handleDeepLink() {
   const occasionId = new URLSearchParams(window.location.search).get("occasionId");
-  if (occasionId && occasions.some(o => o.id === occasionId)) selectedOccasionId = occasionId;
+  if (!occasionId) return;
+  // A shared link or notification can point at a sheet that has since closed,
+  // and closed sheets are no longer loaded up front. Without this, following
+  // that link would quietly land on the Active list instead of the sheet.
+  if (!occasions.some(o => o.id === occasionId)) {
+    try { await loadClosed(); } catch { /* fall through to the list */ }
+  }
+  if (occasions.some(o => o.id === occasionId)) {
+    selectedOccasionId = occasionId;
+    if ((occasions.find(o => o.id === occasionId)?.status ?? "open") === "closed") view = "closed";
+  }
 }
 
 function clearMessages() { error = ""; notice = ""; }
@@ -948,7 +1015,15 @@ document.addEventListener("click", (event) => {
   if (open) { selectedOccasionId = open; clearMessages(); render(); return; }
   if (t.matches("[data-back], [data-view-active]")) { selectedOccasionId = null; editingOccasionId = null; view = "active"; clearMessages(); render(); return; }
   if (t.matches("[data-view-create]")) { view = "create"; editingOccasionId = null; selectedOccasionId = null; clearMessages(); render(); return; }
-  if (t.hasAttribute("data-tab")) { view = t.getAttribute("data-tab"); selectedOccasionId = null; clearMessages(); render(); return; }
+  if (t.hasAttribute("data-tab")) {
+    view = t.getAttribute("data-tab");
+    selectedOccasionId = null;
+    clearMessages();
+    render();
+    // The closed archive is not loaded up front; pull it on first ask, then redraw.
+    if (view === "closed") loadClosed().then(render).catch((e) => { error = e.message; render(); });
+    return;
+  }
   if (t.matches("[data-refresh]")) { refresh(); return; }
   if (t.hasAttribute("data-edit")) { editingOccasionId = t.getAttribute("data-edit"); view = "create"; clearMessages(); render(); return; }
   if (t.matches("[data-modal-cancel]")) { closeModal(); return; }
