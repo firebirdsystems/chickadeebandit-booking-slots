@@ -206,3 +206,84 @@ export function occasionTotals(occasionId, slots, bookings) {
 export function searchableFields(occasion) {
   return [occasion.title, occasion.location, occasion.description];
 }
+
+// ── the household calendar export ────────────────────────────────────────────
+export const CALENDAR_EXPORT_HORIZON_DAYS = 180;
+export const CALENDAR_EXPORT_MAX_EVENTS = 100;
+
+/**
+ * Six months of horizon, walked in UTC off the household's own `todayIso`
+ * rather than off a Date built here. Same reasoning as dateLabel(): a bare
+ * `yyyy-mm-dd` carries no zone, so parsing it through the device clock moves
+ * the boundary a day for half the world — and this one decides what the
+ * household calendar shows.
+ */
+function horizonDay(todayIso) {
+  if (typeof todayIso !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(todayIso)) return todayIso ?? "";
+  const [y, m, d] = todayIso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d) + CALENDAR_EXPORT_HORIZON_DAYS * 86400000);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+}
+
+/**
+ * Build the `calendar_events` payload — the slots someone has actually BOOKED.
+ *
+ * Shape matches what the hub's cross-app aggregation consumes (see
+ * `normalizeExportedEvent` in packages/hub/src/cloudflare/calendar-feed.ts).
+ * A slot with no `start_time` becomes an all-day entry: the hub derives
+ * `allDay` from the absence of a `T` in `start`, so a date-only slot degrades
+ * on its own.
+ *
+ * Only booked slots go out, and that is the whole design. An empty 15-minute
+ * slot is not an appointment — exporting a laid-out conference afternoon would
+ * put 48 nothings on the household calendar and spend the 100-entry cap before
+ * reaching the one time somebody is actually expected.
+ *
+ * `guest_name` IS exported: `bookings` is `endpoint_only` with `read:
+ * "everyone"`, so every member of the scope already sees who booked, and who
+ * you are meeting is the point of the entry. `guest_contact` and `guest_note`
+ * are deliberately NOT — both carry a `column_read_acls` restriction to adults,
+ * so they are not scope-wide readable, and this blob is scope-wide (row
+ * policies do not filter it) and reaches external calendar services through the
+ * household ICS feed. The occasion's own `description` is withheld for the same
+ * ICS reason; `location` is exported, because telling you where to go is what a
+ * calendar entry is FOR.
+ */
+export function buildCalendarEvents(occasions, slots, bookings, todayIso) {
+  // Closed sheets are archives — their slots stay on the books but nobody is
+  // expected anywhere. Only open sheets reach the calendar.
+  const openById = new Map(occasions.filter((o) => (o.status ?? "open") === "open").map((o) => [o.id, o]));
+  const horizon = horizonDay(todayIso);
+  return slots
+    .filter((s) => s.status !== "closed" && s.slot_date >= todayIso && s.slot_date <= horizon)
+    .map((s) => {
+      const occasion = openById.get(s.occasion_id);
+      if (!occasion) return null;
+      const names = bookingsForSlot(bookings, s.id).map((b) => b.guest_name).filter(Boolean);
+      if (!names.length) return null;
+      const start = s.start_time ? `${s.slot_date}T${s.start_time}` : s.slot_date;
+      const end = s.start_time && s.end_time ? `${s.slot_date}T${s.end_time}` : start;
+      return {
+        id: s.id,
+        // Denormalized on the slot precisely so projections that cannot re-join
+        // the parent have a title; the occasion is the fallback for a row
+        // written before that column existed.
+        title: s.occasion_title || occasion.title || "",
+        // A multi-spot slot is one appointment with several people in it, so
+        // the description names all of them rather than emitting one entry each.
+        description: names.join(", "),
+        location: occasion.location || "",
+        start,
+        end,
+        all_day: !s.start_time,
+        // Bookings come in through the public share link from people who are
+        // not household members, so there is no member to attribute this to.
+        member_ids: [],
+        source_label: "Booking Slots",
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
+    .slice(0, CALENDAR_EXPORT_MAX_EVENTS);
+}

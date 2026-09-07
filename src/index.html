@@ -129,15 +129,17 @@
 <div class="app"><div id="root" class="loading">Loading…</div></div>
 
 <script type="module">
-import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper } from "/hub-sdk.js";
+import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday } from "/hub-sdk.js";
 import {
   canManage as _canManage, dateLabel, timeToMinutes, timeLabel, slotLabel, slotTimes, normalizeTimestamp,
-  bookingsForSlot, isSlotFull, parseCapacity, slotState,
+  bookingsForSlot, parseCapacity, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals as _occasionTotals, searchableFields,
+  buildCalendarEvents,
 } from "./logic.js";
 
 const CONTEXT    = window.__CONTEXT_URL    ?? "";
 const DB         = window.__DB_URL         ?? "";
+const STORE_URL  = window.__STORE_URL      ?? "";
 const EVENTS_URL = window.__EVENTS_URL     ?? "/api/events";
 const APP_ID     = window.__APP_ID         ?? "booking-slots";
 const ME         = window.__CURRENT_MEMBER ?? null;
@@ -244,6 +246,28 @@ async function dbAll(sql, params = []) {
     if (page.rows.length < DB_PAGE_SIZE) return rows;
   }
 }
+/**
+ * Republish the `calendar_events` export so booked times show up on the
+ * household calendar and in the ICS feed. Best-effort and never awaited into a
+ * caller's error path: a failed sync must not roll back a slot the organizer
+ * just saved, and the next mutation republishes the whole payload anyway.
+ *
+ * Gated on canManage() here rather than at each call site. The store key is
+ * adult-write (manifest store_acls), so a non-adult calling it would only
+ * collect a silent 403 — and every mutation below is already adult-only, so
+ * the one gate covers them all, including the post-refresh republish that
+ * picks up bookings which arrived through the share link.
+ */
+async function syncCalendar() {
+  if (!STORE_URL || !DB || !canManage()) return;
+  const events = buildCalendarEvents(occasions, slots, bookings, hubToday());
+  await fetch(STORE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: "calendar_events", value: JSON.stringify(events) }),
+  }).catch(() => {});
+}
+
 function publish(type, subject_id, payload) {
   fetch(EVENTS_URL, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -352,6 +376,10 @@ async function refresh({ deepLink = false } = {}) {
     if (selectedOccasionId && !occasions.some(o => o.id === selectedOccasionId)) selectedOccasionId = null;
     if (deepLink) await handleDeepLink();
     render();
+    // A booking arrives through the public share link, with no session in
+    // here to notice it. Loading is the moment the app finds out, so it is
+    // also the moment the export can catch up.
+    syncCalendar();
   } catch (e) { error = e.message; render(); }
 }
 async function handleDeepLink() {
@@ -445,6 +473,7 @@ async function updateOccasion(occasionId, fields) {
   selectedOccasionId = occasionId;
   view = "active";
   showNotice("Booking sheet updated.");
+  syncCalendar();
 }
 
 // One place builds a slot row, so `label` and `occasion_title` can never be
@@ -500,6 +529,7 @@ async function addSlots(form) {
     form.reset();
     form.capacity.value = "1";
     showNotice(rows.length === 1 ? `Added ${rows[0].label}.` : `Added ${rows.length} slots on ${dateLabel(slotDate)}.`);
+    syncCalendar();
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "Add"; }
     showError(e.message);
@@ -539,6 +569,7 @@ async function removeSlot(slotId) {
     slots = slots.filter(s => s.id !== slotId);
     bookings = bookings.filter(b => b.slot_id !== slotId);
     showNotice("Slot removed.");
+    syncCalendar();
   } catch (e) {
     if (admissionPaused && slots.some(s => s.id === slotId)) {
       try {
@@ -569,6 +600,7 @@ async function toggleSlotClosed(slotId) {
     const i = slots.findIndex(s => s.id === slotId);
     if (i !== -1) slots[i] = { ...slots[i], status };
     render();
+    syncCalendar();
   } catch (e) { showError(e.message); }
 }
 
@@ -627,6 +659,7 @@ async function setOccasionStatus(occasionId, status) {
     const i = occasions.findIndex(o => o.id === occasionId);
     if (i !== -1) occasions[i] = { ...occasions[i], status };
     showNotice(status === "closed" ? "Booking sheet closed." : "Booking sheet reopened.");
+    syncCalendar();
   } catch (e) { showError(e.message); }
 }
 
@@ -687,6 +720,7 @@ async function deleteOccasion(occasionId) {
     bookings = bookings.filter(b => b.occasion_id !== occasionId);
     selectedOccasionId = null;
     showNotice("Booking sheet deleted.");
+    syncCalendar();
   } catch (e) {
     if (admissionPaused && occasions.some(o => o.id === occasionId)) {
       try {

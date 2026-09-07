@@ -195,6 +195,11 @@
     }
   ],
 
+  "exports": ["calendar_events"],
+  "store_acls": {
+    "calendar_events": { "write": { "require_role": "adult" } }
+  },
+
   "publishes": [
     "booking_slots.occasion_opened"
   ],

@@ -179,6 +179,33 @@ describe("index.html call sites", () => {
     expect(html).not.toContain('dbq("SELECT b.* FROM app_booking_slots__bookings');
   });
 
+  it("publishes booked times to the household calendar", () => {
+    // The hub only aggregates an app's calendar_events export when the manifest
+    // lists it (collectCrossAppEvents filters on manifest.exports), so dropping
+    // this key silently empties every booked time off the calendar.
+    expect(manifest.exports).toContain("calendar_events");
+  });
+
+  it("gates the calendar export behind an adult", () => {
+    // Without this ACL any member could POST straight to the store key and
+    // rewrite what the household calendar and the ICS feed show. The occasions
+    // and slots tables are adult_writable, so the app's own sync path is
+    // already adult-only — this closes the direct-POST path behind it.
+    expect(manifest.store_acls?.calendar_events?.write?.require_role).toBe("adult");
+  });
+
+  it("keeps the adult-only booking columns out of the exported payload", () => {
+    // guest_contact and guest_note are adult-only by column_read_acls, and the
+    // calendar_events blob is scope-wide (row policies do not filter it) and
+    // leaves the household through the ICS feed. buildCalendarEvents must never
+    // learn to read them — logic.test.mjs asserts the same on the payload.
+    for (const col of ["guest_contact", "guest_note"]) {
+      expect(manifest.row_policies?.bookings?.column_read_acls?.[col]?.visible_to).toEqual(["adult"]);
+      expect(html.includes(`b.${col}`), col).toBe(false);
+    }
+    expect(html).toContain("buildCalendarEvents(occasions, slots, bookings, hubToday())");
+  });
+
   it("rejects slot runs that cannot fit in one atomic batch", () => {
     expect(html).toContain("const ATOMIC_SLOT_LIMIT = 25");
     expect(html).toContain("times.length > ATOMIC_SLOT_LIMIT");

@@ -4,6 +4,7 @@ import {
   normalizeTimestamp, parseCapacity,
   bookingsForSlot, bookingCount, isSlotFull, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals, searchableFields,
+  buildCalendarEvents, CALENDAR_EXPORT_MAX_EVENTS,
 } from "../src/logic.js";
 
 const adult = { id: "a1", name: "Alex", role: "adult" };
@@ -266,5 +267,127 @@ describe("searchableFields", () => {
     const fields = searchableFields({ title: "Conferences", location: "Room 12", description: "Fifteen minutes each" });
     expect(fields).toContain("Room 12");
     expect(fields).toContain("Fifteen minutes each");
+  });
+});
+
+describe("buildCalendarEvents", () => {
+  const TODAY = "2026-03-03";
+  const occasions = [
+    { id: "o1", title: "Parent-teacher conferences", location: "Room 12",
+      description: "Fifteen minutes each. Please arrive early.", status: "open" },
+    { id: "o2", title: "Last spring's tryouts", location: "Gym", status: "closed" },
+  ];
+  const build = (slots, bookings, occ = occasions) => buildCalendarEvents(occ, slots, bookings, TODAY);
+
+  it("emits a timed entry the hub can parse for a slot somebody booked", () => {
+    const [ev] = build([slot({ slot_date: "2026-03-04" })], [booking()]);
+    expect(ev.id).toBe("s1");
+    expect(ev.title).toBe("Conferences");
+    expect(ev.description).toBe("Marta");
+    expect(ev.location).toBe("Room 12");
+    expect(ev.start).toBe("2026-03-04T14:00");
+    expect(ev.end).toBe("2026-03-04T14:15");
+    expect(ev.all_day).toBe(false);
+    // Guests book through the public link, so there is no member to attribute.
+    expect(ev.member_ids).toEqual([]);
+    expect(ev.source_label).toBe("Booking Slots");
+  });
+
+  it("exports nothing for a slot nobody has booked", () => {
+    // An empty 15-minute slot is not an appointment. A laid-out conference
+    // afternoon would otherwise spend the 100-entry cap on nothings.
+    expect(build([slot({ slot_date: "2026-03-04" })], [])).toEqual([]);
+  });
+
+  it("names every guest on a multi-spot slot in one entry", () => {
+    const [ev] = build(
+      [slot({ slot_date: "2026-03-04", capacity: 2 })],
+      [booking(), booking({ id: "b2", guest_name: "Dev Patel" })],
+    );
+    expect(ev.description).toBe("Marta, Dev Patel");
+  });
+
+  it("degrades a time-less slot to an all-day entry with no T in start", () => {
+    const [ev] = build(
+      [slot({ slot_date: "2026-03-04", start_time: "", end_time: "" })],
+      [booking()],
+    );
+    expect(ev.start).toBe("2026-03-04");
+    expect(ev.end).toBe("2026-03-04");
+    expect(ev.all_day).toBe(true);
+  });
+
+  it("falls back to the start when a slot carries no end time", () => {
+    const [ev] = build([slot({ slot_date: "2026-03-04", end_time: "" })], [booking()]);
+    expect(ev.end).toBe("2026-03-04T14:00");
+  });
+
+  it("drops past slots and anything beyond the horizon", () => {
+    const ids = build([
+      slot({ id: "past", slot_date: "2026-03-02" }),
+      slot({ id: "today", slot_date: TODAY }),
+      slot({ id: "far", slot_date: "2027-03-04" }),
+    ], [
+      booking({ id: "bp", slot_id: "past" }),
+      booking({ id: "bt", slot_id: "today" }),
+      booking({ id: "bf", slot_id: "far" }),
+    ]).map(e => e.id);
+    expect(ids).toEqual(["today"]);
+  });
+
+  it("keeps the last day inside the horizon and drops the first day past it", () => {
+    const ids = build([
+      slot({ id: "edge", slot_date: "2026-08-30" }),   // TODAY + 180
+      slot({ id: "over", slot_date: "2026-08-31" }),   // TODAY + 181
+    ], [
+      booking({ id: "be", slot_id: "edge" }),
+      booking({ id: "bo", slot_id: "over" }),
+    ]).map(e => e.id);
+    expect(ids).toEqual(["edge"]);
+  });
+
+  it("skips a closed slot and a slot whose sheet is closed or gone", () => {
+    expect(build([
+      slot({ id: "shut", slot_date: "2026-03-04", status: "closed" }),
+      slot({ id: "archived", occasion_id: "o2", slot_date: "2026-03-04" }),
+      slot({ id: "orphan", occasion_id: "gone", slot_date: "2026-03-04" }),
+    ], [
+      booking({ id: "b1", slot_id: "shut" }),
+      booking({ id: "b2", slot_id: "archived" }),
+      booking({ id: "b3", slot_id: "orphan" }),
+    ])).toEqual([]);
+  });
+
+  it("never exports a guest's contact details, note, or the sheet's description", () => {
+    // guest_contact and guest_note carry column_read_acls restricting them to
+    // adults, so they are NOT scope-wide readable — and this blob is scope-wide
+    // and reaches external calendar services through the household ICS feed.
+    // The sheet's description is free text a member typed, withheld for the
+    // same reason. Asserted on the serialized payload, not on the fields we
+    // happened to name, so a stray spread cannot smuggle one through.
+    const json = JSON.stringify(build(
+      [slot({ slot_date: "2026-03-04" })],
+      [booking({ guest_contact: "555-0114", guest_note: "Running late from work" })],
+    ));
+    expect(json).toContain("Marta");
+    expect(json).not.toContain("555-0114");
+    expect(json).not.toContain("Running late from work");
+    expect(json).not.toContain("Fifteen minutes each");
+  });
+
+  it("caps the payload at the hub's per-app ceiling, keeping the nearest slots", () => {
+    // The hub's MAX_FEED_EVENTS_PER_APP and MAX_CROSS_APP_EVENTS_PER_APP are
+    // both 100, so anything past that only burns bytes.
+    const slots = [];
+    const bookings = [];
+    const day = (n) => new Date(Date.UTC(2026, 2, 4) + n * 86400000).toISOString().slice(0, 10);
+    for (let i = 0; i < CALENDAR_EXPORT_MAX_EVENTS + 20; i++) {
+      slots.push(slot({ id: `s${i}`, slot_date: day(i) }));
+      bookings.push(booking({ id: `b${i}`, slot_id: `s${i}` }));
+    }
+    const events = build(slots, bookings);
+    expect(events).toHaveLength(CALENDAR_EXPORT_MAX_EVENTS);
+    expect(events[0].start).toBe("2026-03-04T14:00");
+    expect(events.at(-1).id).toBe(`s${CALENDAR_EXPORT_MAX_EVENTS - 1}`);
   });
 });
