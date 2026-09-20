@@ -1,5 +1,7 @@
 # Booking Slots
 
+A [Chickadee Bandit](https://chickadeebandit.com/app-library/booking-slots) app.
+
 Booking Slots is a Chickadee Bandit app for publishing a set of available
 times and collecting bookings through an expiring share link. It works well
 for parent-teacher conferences, pickup windows, tryouts, and similar events.
