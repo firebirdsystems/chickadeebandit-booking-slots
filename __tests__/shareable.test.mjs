@@ -438,7 +438,9 @@ describe("the app's own controls over the share surface", () => {
 
   it("reports share-list failures instead of leaving an unhandled rejection", () => {
     expect(appHtml).toContain("Couldn't load share links");
-    expect(appHtml).toMatch(/try \{\s*status = await share\.status\(\);/);
+    // listAll, not status: a panel that offers Revoke must read every page,
+    // or a live link behind a long audit tail is one nobody can withdraw.
+    expect(appHtml).toMatch(/try \{\s*status = await share\.listAll\(\);/);
   });
 
   it("writes the feed gate on the occasion row the feed's parent_where reads", () => {

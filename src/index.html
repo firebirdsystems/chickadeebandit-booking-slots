@@ -129,7 +129,7 @@
 <div class="app"><div id="root" class="loading">Loading…</div></div>
 
 <script type="module">
-import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday } from "/hub-sdk.js";
+import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS } from "/hub-sdk.js";
 import {
   canManage as _canManage, dateLabel, timeToMinutes, timeLabel, slotLabel, slotTimes, normalizeTimestamp,
   bookingsForSlot, parseCapacity, slotState,
@@ -929,15 +929,14 @@ async function openShareModal(occasionId) {
   if (!occasion) return;
   let status;
   try {
-    status = await share.status();
+    status = await share.listAll();
   } catch (err) {
     hubAlert("Couldn't load share links", { description: err.message });
     return;
   }
   _shareLinks = status.links;
   _shareEntitled = status.entitled;
-  const active = _shareLinks.filter(l =>
-    l.itemId === occasionId && !l.revokedAt && new Date(l.expiresAt) > new Date());
+  const active = activeShareLinks(_shareLinks, occasionId);
 
   const rows = active.map(l => `
     <div class="share-row" data-testid="share-link" data-link-id="${esc(l.id)}">
@@ -991,9 +990,8 @@ async function openShareModal(occasionId) {
     ${premiumControls}
     <div class="share-create">
       <select id="share-expiry">
-        <option value="24">1 day</option>
-        <option value="168" selected>7 days</option>
-        <option value="720">30 days</option>
+        ${SHARE_EXPIRY_CHOICES.map(({ hours, label }) =>
+              `<option value="${hours}"${hours === DEFAULT_SHARE_EXPIRY_HOURS ? " selected" : ""}>${label}</option>`).join("")}
         ${_shareEntitled ? `<option value="8760">1 year</option>` : ""}
       </select>
       <button class="btn btn-sm" data-testid="share-create" data-share-create="${esc(occasionId)}">Create link</button>
