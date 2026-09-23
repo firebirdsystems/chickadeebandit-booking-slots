@@ -172,11 +172,28 @@ describe("index.html call sites", () => {
   it("paginates every initial table read below the Hub response ceiling", () => {
     expect(html).toContain("const DB_PAGE_SIZE = 1000");
     expect(html).toContain("async function dbAll(sql, params = [])");
-    // Bookings are scoped to their parent sheet's status now, so the read is a
-    // JOIN — but it must still go through dbAll (paged), never a bare dbq.
-    expect(html).toContain('dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN');
+    // Bookings are scoped to their parent sheets by id (see the JOIN rule
+    // below), but the read must still go through dbAll (paged), never dbq.
+    expect(html).toContain("SELECT * FROM app_booking_slots__bookings WHERE occasion_id IN");
     expect(html).not.toContain('dbq("SELECT * FROM app_booking_slots__bookings');
     expect(html).not.toContain('dbq("SELECT b.* FROM app_booking_slots__bookings');
+  });
+
+  it("never reads the bookings table through a JOIN", () => {
+    // `bookings` carries column_read_acls (guest_contact, guest_note: adults
+    // only) and the hub REFUSES to column-mask a SELECT that joins a governed
+    // table — it cannot tell which side of the join a masked value came from,
+    // so it fails the whole statement closed.
+    //
+    // For an adult nothing needs masking and the join is allowed, so this was
+    // invisible to every test and every hand-check done as an adult. For a
+    // child the read threw, the Promise.all around it threw, and the app
+    // rendered NO booking sheets at all — not sheets without contact details.
+    // Scope by an explicit id list instead; a subquery is not an option either,
+    // because the rewriter fails closed on a governed table named only inside
+    // one.
+    expect(manifest.row_policies.bookings.column_read_acls).toBeTruthy();
+    expect(html).not.toMatch(/FROM app_booking_slots__bookings\s+\w+\s+JOIN/i);
   });
 
   it("publishes booked times to the household calendar", () => {

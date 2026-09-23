@@ -287,3 +287,60 @@ export function buildCalendarEvents(occasions, slots, bookings, todayIso) {
     .sort((a, b) => String(a.start).localeCompare(String(b.start)))
     .slice(0, CALENDAR_EXPORT_MAX_EVENTS);
 }
+
+// ── Chunked reads ───────────────────────────────────────────────────────────
+
+/**
+ * Most bound parameters one statement may carry.
+ *
+ * D1 rejects a prepared statement with more than 100, so any
+ * `WHERE col IN (?, ?, …)` built from a runtime-sized list has to be split.
+ * 90 leaves headroom for other bound values alongside the list — the hub keeps
+ * the same number and the same reasoning in
+ * packages/hub/src/cloudflare/concurrency.ts.
+ */
+export const DB_MAX_IN_PARAMS = 90;
+
+/** Consecutive sub-arrays of at most `size` items. */
+export function chunkIds(ids, size = DB_MAX_IN_PARAMS) {
+  if (size < 1) throw new Error("chunk size must be >= 1");
+  const out = [];
+  for (let i = 0; i < ids.length; i += size) out.push(ids.slice(i, i + size));
+  return out;
+}
+
+/**
+ * The order the bookings list must be in: created_at, then id.
+ *
+ * Needed because a chunked read loses it. Each chunk comes back ordered within
+ * itself, and concatenating them interleaves nothing — sheet 91's bookings
+ * would all sort after sheet 90's regardless of when they were made. The
+ * public feed renders in this order (manifest shareable.occasion.feed,
+ * order_column created_at / oldest), so the in-app view has to agree with it.
+ *
+ * Compared with `<` and `>` rather than localeCompare: SQLite's default
+ * collation is BINARY, and localeCompare is not — the two disagree on case and
+ * punctuation, which would put the merged list in an order the single-chunk
+ * read never produces.
+ */
+export function compareBookings(a, b) {
+  const at = a.created_at ?? "", bt = b.created_at ?? "";
+  if (at !== bt) return at < bt ? -1 : 1;
+  const ai = a.id ?? "", bi = b.id ?? "";
+  return ai === bi ? 0 : ai < bi ? -1 : 1;
+}
+
+/**
+ * Rows for `ids`, read in chunks small enough for D1 and merged back into one
+ * globally ordered list.
+ *
+ * `runChunk(ids)` does the actual read for one chunk and returns its rows; it
+ * is a parameter so the chunking, the merge and the ordering can be tested
+ * without a database — the bug this exists to prevent only appears past 100
+ * sheets, which no string assertion over index.html can see.
+ */
+export async function readInChunks(ids, runChunk, size = DB_MAX_IN_PARAMS) {
+  if (!ids.length) return [];
+  const pages = await Promise.all(chunkIds(ids, size).map(runChunk));
+  return pages.flat().sort(compareBookings);
+}

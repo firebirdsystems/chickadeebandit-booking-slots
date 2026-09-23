@@ -5,6 +5,7 @@ import {
   bookingsForSlot, bookingCount, isSlotFull, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals, searchableFields,
   buildCalendarEvents, CALENDAR_EXPORT_MAX_EVENTS,
+  readInChunks, chunkIds, compareBookings, DB_MAX_IN_PARAMS,
 } from "../src/logic.js";
 
 const adult = { id: "a1", name: "Alex", role: "adult" };
@@ -389,5 +390,94 @@ describe("buildCalendarEvents", () => {
     expect(events).toHaveLength(CALENDAR_EXPORT_MAX_EVENTS);
     expect(events[0].start).toBe("2026-03-04T14:00");
     expect(events.at(-1).id).toBe(`s${CALENDAR_EXPORT_MAX_EVENTS - 1}`);
+  });
+});
+
+
+describe("reading bookings for more sheets than D1 will take parameters for", () => {
+  // The whole point of this block is the count. Every other test here runs on
+  // a handful of rows, and the failure being guarded against appears only past
+  // 100 — which is also why it cannot be caught by asserting on the SQL string
+  // in index.html, where the id list is built at runtime from whatever the
+  // household happens to have.
+  const ids = (n) => Array.from({ length: n }, (_, i) => `oc-${String(i).padStart(4, "0")}`);
+
+  /** A stand-in for dbAll that records what each chunk was asked for. */
+  function fakeDb(rowsById = () => []) {
+    const calls = [];
+    return {
+      calls,
+      run: async (chunk) => {
+        calls.push(chunk);
+        return chunk.flatMap(rowsById);
+      },
+    };
+  }
+
+  it("never asks for more parameters than D1 accepts", () => {
+    expect(DB_MAX_IN_PARAMS).toBeLessThanOrEqual(100);
+    for (const n of [0, 1, 89, 90, 91, 100, 101, 250, 1000]) {
+      for (const part of chunkIds(ids(n))) {
+        expect(part.length, `${n} sheets`).toBeLessThanOrEqual(DB_MAX_IN_PARAMS);
+        expect(part.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("covers every sheet exactly once, in order, however many there are", () => {
+    for (const n of [1, 90, 91, 180, 181, 250]) {
+      const flat = chunkIds(ids(n)).flat();
+      expect(flat, `${n} sheets`).toEqual(ids(n));
+      expect(new Set(flat).size).toBe(n);
+    }
+  });
+
+  it("reads 101 sheets as two statements rather than one oversized one", async () => {
+    const db = fakeDb();
+    await readInChunks(ids(101), db.run);
+    expect(db.calls).toHaveLength(2);
+    expect(db.calls.map(c => c.length)).toEqual([90, 11]);
+  });
+
+  it("sends nothing at all when there are no sheets", async () => {
+    const db = fakeDb();
+    expect(await readInChunks([], db.run)).toEqual([]);
+    expect(db.calls).toHaveLength(0);
+  });
+
+  it("restores one global order across the chunk boundary", async () => {
+    // The bug a naive merge leaves behind: each chunk is ordered within itself,
+    // so concatenating them sorts by CHUNK first. Sheet 100's booking is older
+    // than sheet 1's here, and has to come first in the merged list.
+    const rows = {
+      "oc-0000": { id: "b-late", occasion_id: "oc-0000", created_at: "2026-03-09T10:00:00Z" },
+      "oc-0100": { id: "b-early", occasion_id: "oc-0100", created_at: "2026-03-01T10:00:00Z" },
+    };
+    const db = fakeDb((id) => (rows[id] ? [rows[id]] : []));
+    const merged = await readInChunks(ids(101), db.run);
+    expect(merged.map(r => r.id)).toEqual(["b-early", "b-late"]);
+  });
+
+  it("breaks a tie on id, the way the SQL does", () => {
+    const at = "2026-03-01T10:00:00Z";
+    const sorted = [
+      { id: "b-2", created_at: at },
+      { id: "b-1", created_at: at },
+    ].sort(compareBookings);
+    expect(sorted.map(r => r.id)).toEqual(["b-1", "b-2"]);
+    // Binary collation, not locale: uppercase sorts before lowercase, which is
+    // what a single-chunk read would have returned.
+    expect([{ id: "b", created_at: at }, { id: "B", created_at: at }].sort(compareBookings).map(r => r.id))
+      .toEqual(["B", "b"]);
+    expect(compareBookings({ id: "x", created_at: at }, { id: "x", created_at: at })).toBe(0);
+  });
+
+  it("treats a missing created_at as the earliest rather than throwing", () => {
+    const sorted = [{ id: "b-2", created_at: "2026-03-01T10:00:00Z" }, { id: "b-1" }].sort(compareBookings);
+    expect(sorted.map(r => r.id)).toEqual(["b-1", "b-2"]);
+  });
+
+  it("refuses a chunk size that would loop forever", () => {
+    expect(() => chunkIds(ids(3), 0)).toThrow();
   });
 });

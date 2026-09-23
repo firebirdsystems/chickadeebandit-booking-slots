@@ -132,6 +132,7 @@
 import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS } from "/hub-sdk.js";
 import {
   canManage as _canManage, dateLabel, timeToMinutes, timeLabel, slotLabel, slotTimes, normalizeTimestamp,
+  readInChunks, DB_MAX_IN_PARAMS,
   bookingsForSlot, parseCapacity, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals as _occasionTotals, searchableFields,
   buildCalendarEvents,
@@ -311,6 +312,42 @@ function seedDemo() {
   ];
 }
 
+/**
+ * The bookings for a set of sheets, scoped by id rather than by a JOIN.
+ *
+ * `bookings` carries column_read_acls (guest_contact and guest_note are
+ * adult-only), and the hub REFUSES to column-mask a SELECT that joins a
+ * governed table — it cannot know which side of the join a masked value came
+ * from, so it fails closed on the whole statement rather than leak one. For an
+ * adult nothing needs masking and the join was allowed, which is why this only
+ * ever broke for children: the read threw, the Promise.all with it, and the
+ * app rendered no sheets at all rather than sheets without contact details.
+ *
+ * So this one read is scoped by an explicit id list instead. Not a subquery:
+ * the row-policy rewriter fails closed on a governed table named only inside
+ * one, which is the trap the JOIN was avoiding in the first place. An inline
+ * list of ids we already hold is neither.
+ *
+ * CHUNKED, because that id list is as long as the household's sheet archive.
+ * D1 refuses a statement with more than 100 bound parameters, so a household
+ * with 101 sheets would have had this read fail outright — trading "a child
+ * sees nothing" for "everybody sees nothing", which is not a fix. The merge
+ * re-sorts, because each chunk is only ordered within itself: see
+ * compareBookings in logic.js.
+ */
+function bookingsForOccasions(occasionRows) {
+  return readInChunks(
+    occasionRows.map(o => o.id),
+    // Ordered per chunk as well, so a single-chunk read is already right and
+    // the sort afterwards has less to do.
+    ids => dbAll(
+      `SELECT * FROM app_booking_slots__bookings WHERE occasion_id IN (${ids.map(() => "?").join(",")}) ORDER BY created_at ASC, id ASC`,
+      ids,
+    ),
+    DB_MAX_IN_PARAMS,
+  );
+}
+
 async function loadData() {
   if (!DB) { seedDemo(); return; }
   // Only the OPEN sheets, their slots and their bookings. The app lands on the
@@ -324,13 +361,13 @@ async function loadData() {
   // subquery, while a joined table keeps its own policy applied. The per-sheet
   // "n/m spots booked" tally is computed from these rows, so they have to
   // arrive with their sheet rather than lag behind it.
-  const [occasionRows, slotRows, bookingRows] = await Promise.all([
+  const [occasionRows, slotRows] = await Promise.all([
     dbAll("SELECT * FROM app_booking_slots__occasions WHERE status = 'open' ORDER BY created_at ASC, id ASC"),
     dbAll("SELECT s.* FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'open' ORDER BY s.slot_date ASC, s.start_time ASC, s.created_at ASC, s.id ASC"),
-    // Same order the public feed renders in (manifest shareable.occasion.feed,
-    // order_column created_at / oldest), so the two views agree.
-    dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN app_booking_slots__occasions o ON o.id = b.occasion_id AND o.status = 'open' ORDER BY b.created_at ASC, b.id ASC"),
   ]);
+  // Bookings wait for their sheets: see bookingsForOccasions for why this one
+  // cannot be joined. `slots` carries no column ACLs, so its join is fine.
+  const bookingRows = await bookingsForOccasions(occasionRows);
   occasions = occasionRows;
   slots = slotRows;
   bookings = bookingRows;
@@ -350,8 +387,8 @@ function loadClosed() {
   closedPromise ??= Promise.all([
     dbAll("SELECT * FROM app_booking_slots__occasions WHERE status = 'closed' ORDER BY created_at ASC, id ASC"),
     dbAll("SELECT s.* FROM app_booking_slots__slots s JOIN app_booking_slots__occasions o ON o.id = s.occasion_id AND o.status = 'closed' ORDER BY s.slot_date ASC, s.start_time ASC, s.created_at ASC, s.id ASC"),
-    dbAll("SELECT b.* FROM app_booking_slots__bookings b JOIN app_booking_slots__occasions o ON o.id = b.occasion_id AND o.status = 'closed' ORDER BY b.created_at ASC, b.id ASC"),
   ])
+    .then(async ([occasionRows, slotRows]) => [occasionRows, slotRows, await bookingsForOccasions(occasionRows)])
     .then(([occasionRows, slotRows, bookingRows]) => {
       const merge = (have, incoming) => {
         const seen = new Set(have.map(r => r.id));
