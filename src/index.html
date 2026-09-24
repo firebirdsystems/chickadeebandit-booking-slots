@@ -999,10 +999,9 @@ async function openShareModal(occasionId) {
     ? `<div class="warn-box" data-testid="share-no-slots">No slots are open right now, so nobody can book through the link. Add a slot, or reopen one, first.</div>`
     : "";
 
-  // Premium (`sharing`) controls: a writable link, a password, a long expiry.
-  // A read-only link still shows the occasion; collecting bookings is the
-  // premium half.
-  const premiumControls = _shareEntitled ? `
+  // `sharing` controls: a writable link, a password, a long expiry. A read-only
+  // link still shows the occasion; collecting bookings needs the capability.
+  const sharingControls = _shareEntitled ? `
     <label class="share-opt">
       <input type="checkbox" id="share-writable" data-testid="share-writable" /> Let people book a time through the link
     </label>
@@ -1010,7 +1009,7 @@ async function openShareModal(occasionId) {
   ` : "";
   const shareDescription = _shareEntitled
     ? "Anyone with the link can see the sheet. Turn on booking below if they should be able to claim an open time."
-    : "Anyone with the link can see the sheet. This link is read-only; collecting bookings requires premium sharing.";
+    : "Anyone with the link can see the sheet. This link is read-only; collecting bookings needs an active plan.";
 
   openModal(`
     <h2 style="margin-bottom:2px;">Share "${esc(occasion.title)}"</h2>
@@ -1024,7 +1023,7 @@ async function openShareModal(occasionId) {
              ${occasion.show_bookings === "yes" ? "checked" : ""} />
       Show who's booked on the public page
     </label>
-    ${premiumControls}
+    ${sharingControls}
     <div class="share-create">
       <select id="share-expiry">
         ${SHARE_EXPIRY_CHOICES.map(({ hours, label }) =>
