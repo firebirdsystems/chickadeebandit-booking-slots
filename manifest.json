@@ -200,6 +200,7 @@
     "calendar_events": { "write": { "require_role": "adult" } }
   },
 
+  "alert_on": ["booking_slots.slot_booked"],
   "publishes": [
     "booking_slots.occasion_opened"
   ],
