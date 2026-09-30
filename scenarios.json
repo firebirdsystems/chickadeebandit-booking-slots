@@ -220,6 +220,51 @@
           "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "capacity": 1 }] }
         }
       ]
+    },
+    {
+      "name": "in a shared space a participant adult sees who booked but not their contact or note, while the steward sees both",
+      "context": "shared_space",
+      "members": { "a": "adult", "steward": "admin" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES ('oc1', ?, '', '', 'no', 'open', ?, 'Steward', '2026-02-20T00:00:00Z')",
+          "params": ["Office hours", "{{steward}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES ('sl1', 'oc1', '2026-03-03', '14:00', '14:15', ?, ?, 1, 'open', '2026-02-20T00:00:00Z')",
+          "params": ["Tue 2:00 PM", "Office hours"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES ('b1', 'oc1', 'sl1', 'Marta Okafor', '555-0114', 'May be 2 min late', '2026-02-21 17:04:00')"
+        },
+        {
+          "action": "db",
+          "as": "a",
+          "sql": "SELECT id, guest_name, guest_contact, guest_note FROM app_booking_slots__bookings WHERE id = ?",
+          "params": ["b1"],
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [{ "guest_name": "Marta Okafor", "guest_contact": null, "guest_note": null }]
+          }
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "SELECT id, guest_name, guest_contact, guest_note FROM app_booking_slots__bookings WHERE id = ?",
+          "params": ["b1"],
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              { "guest_name": "Marta Okafor", "guest_contact": "555-0114", "guest_note": "May be 2 min late" }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
