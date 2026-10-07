@@ -129,7 +129,7 @@
 <div class="app"><div id="root" class="loading">Loading…</div></div>
 
 <script type="module">
-import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS } from "/hub-sdk.js";
+import { esc, initial, hubConfirm, hubAlert, searchMatch, createShareHelper, hubToday, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS, glyph } from "/hub-sdk.js";
 import {
   canManage as _canManage, dateLabel, timeToMinutes, timeLabel, slotLabel, slotTimes, normalizeTimestamp,
   readInChunks, DB_MAX_IN_PARAMS,
@@ -899,7 +899,7 @@ function renderDetail() {
         <div class="tools">
           <span class="pill ${t.complete ? "good" : "info"}" data-testid="occasion-progress">${t.booked}/${t.total} spots booked</span>
           ${closed ? `<span class="pill" data-testid="occasion-closed">Closed</span>` : ""}
-          ${share.enabled && canManage() && !closed ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-share" data-share="${esc(occasion.id)}">🔗 Share</button>` : ""}
+          ${share.enabled && canManage() && !closed ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-share" data-share="${esc(occasion.id)}">${glyph("link")} Share</button>` : ""}
           ${canManage() ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-edit" data-edit="${esc(occasion.id)}">Edit</button>` : ""}
           ${canManage() ? `<button class="btn btn-ghost btn-sm" data-testid="occasion-status" data-set-status="${esc(occasion.id)}">${closed ? "Reopen" : "Close"}</button>` : ""}
           ${canManage() ? `<button class="btn btn-quiet-danger" data-testid="occasion-delete" data-delete-occasion="${esc(occasion.id)}">Delete</button>` : ""}
@@ -981,8 +981,8 @@ async function openShareModal(occasionId) {
         <input class="share-url" readonly value="${esc(l.url)}" onclick="this.select()" />
         <div class="muted tiny" style="margin-top:3px">
           Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}${
-            l.writable ? ` · ${l.submissionCount} booking${l.submissionCount === 1 ? "" : "s"} · ✍️ collects bookings` : ""}${
-            l.hasPassword ? " · 🔒 password" : ""}
+            l.writable ? ` · ${l.submissionCount} booking${l.submissionCount === 1 ? "" : "s"} · ${glyph("pencil")} collects bookings` : ""}${
+            l.hasPassword ? ` · ${glyph("lock")} password` : ""}
         </div>
       </div>
       <button class="btn btn-ghost btn-sm" data-share-copy="${esc(l.id)}">Copy</button>
