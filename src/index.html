@@ -135,7 +135,7 @@ import {
   readInChunks, DB_MAX_IN_PARAMS,
   bookingsForSlot, parseCapacity, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals as _occasionTotals, searchableFields,
-  buildCalendarEvents,
+  buildCalendarEvents, seesGuestDetails,
 } from "./logic.js";
 
 const CONTEXT    = window.__CONTEXT_URL    ?? "";
@@ -144,6 +144,9 @@ const STORE_URL  = window.__STORE_URL      ?? "";
 const EVENTS_URL = window.__EVENTS_URL     ?? "/api/events";
 const APP_ID     = window.__APP_ID         ?? "booking-slots";
 const ME         = window.__CURRENT_MEMBER ?? null;
+// Where the app is running: what a guest left when booking is read by any
+// adult in a household and by the steward alone in a shared space.
+const TENANT     = { tenantKind: window.__TENANT_KIND ?? "household", spaceKind: window.__SPACE_KIND ?? null, isAdmin: window.__IS_ADMIN === true };
 const DB_PAGE_SIZE = 1000;
 const ATOMIC_SLOT_LIMIT = 25;
 
@@ -315,13 +318,15 @@ function seedDemo() {
 /**
  * The bookings for a set of sheets, scoped by id rather than by a JOIN.
  *
- * `bookings` carries column_read_acls (guest_contact and guest_note are
- * adult-only), and the hub REFUSES to column-mask a SELECT that joins a
- * governed table — it cannot know which side of the join a masked value came
- * from, so it fails closed on the whole statement rather than leak one. For an
- * adult nothing needs masking and the join was allowed, which is why this only
- * ever broke for children: the read threw, the Promise.all with it, and the
- * app rendered no sheets at all rather than sheets without contact details.
+ * `bookings` carries column_read_acls: guest_contact and guest_note are read
+ * by whoever supervises — any adult in a household, the steward alone in a
+ * shared space — and masked for everyone else, which is a child at home and
+ * every other adult in a space. The hub REFUSES to column-mask a SELECT that
+ * joins a governed table — it cannot know which side of the join a masked
+ * value came from, so it fails closed on the whole statement rather than leak
+ * one. A joined read therefore throws for every viewer who needs masking, the
+ * Promise.all with it, and the app renders no sheets at all rather than sheets
+ * without contact details.
  *
  * So this one read is scoped by an explicit id list instead. Not a subquery:
  * the row-policy rewriter fails closed on a governed table named only inside
@@ -665,7 +670,7 @@ async function setCapacity(slotId, raw) {
          )`,
         [next, slotId, next, slotId],
       );
-      if (result.changes === 0) {
+      if (result.changed === 0) {
         const occupied = (await refreshSlotBookings(slotId)).length;
         return showError(`This slot already has ${occupied} bookings. Capacity cannot be lower than that.`);
       }
@@ -909,6 +914,7 @@ function renderDetail() {
     </section>
     <section class="card" data-testid="slot-list">
       <div class="section-head"><h2>Time slots</h2><button class="btn btn-ghost btn-sm" data-refresh>Refresh</button></div>
+      ${t.booked && canManage() && !seesGuestDetails(currentMember, TENANT) ? `<p class="muted tiny" data-testid="guest-details-note">In a shared space, the steward sees guests' contact details.</p>` : ""}
       ${renderSlotGroups(occasion.id)}
       ${canManage() ? `
         <form class="add-slots" id="add-slots-form">

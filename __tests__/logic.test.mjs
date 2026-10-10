@@ -5,7 +5,7 @@ import {
   bookingsForSlot, bookingCount, isSlotFull, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals, searchableFields,
   buildCalendarEvents, CALENDAR_EXPORT_MAX_EVENTS,
-  readInChunks, chunkIds, compareBookings, DB_MAX_IN_PARAMS,
+  readInChunks, chunkIds, compareBookings, DB_MAX_IN_PARAMS, seesGuestDetails,
 } from "../src/logic.js";
 
 const adult = { id: "a1", name: "Alex", role: "adult" };
@@ -479,5 +479,22 @@ describe("reading bookings for more sheets than D1 will take parameters for", ()
 
   it("refuses a chunk size that would loop forever", () => {
     expect(() => chunkIds(ids(3), 0)).toThrow();
+  });
+});
+
+describe("seesGuestDetails", () => {
+  it("is every adult in a household, which is the default", () => {
+    expect(seesGuestDetails(adult)).toBe(true);
+    expect(seesGuestDetails(adult, { tenantKind: "household" })).toBe(true);
+  });
+  it("is never a child or nobody", () => {
+    expect(seesGuestDetails(child)).toBe(false);
+    expect(seesGuestDetails(null)).toBe(false);
+  });
+  it("is not an adult who takes part in a shared space", () => {
+    expect(seesGuestDetails(adult, { tenantKind: "shared_space", spaceKind: "general", isAdmin: false })).toBe(false);
+  });
+  it("is the steward of a shared space", () => {
+    expect(seesGuestDetails(adult, { tenantKind: "shared_space", spaceKind: "general", isAdmin: true })).toBe(true);
   });
 });

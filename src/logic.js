@@ -9,6 +9,16 @@ export function canManage(member) {
   return isAdult(member);
 }
 
+/**
+ * Whether a member reads what a guest left when booking (guest_contact and
+ * guest_note). Mirrors the hub's rule for those columns (column_read_acls
+ * listing "adult"): any adult in a household, and only the steward in a shared
+ * space. Everyone else gets the booking with those two columns blanked.
+ */
+export function seesGuestDetails(member, { tenantKind = "household", isAdmin = false } = {}) {
+  return tenantKind === "household" ? isAdult(member) : isAdmin === true;
+}
+
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
