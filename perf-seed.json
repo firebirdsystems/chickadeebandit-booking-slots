@@ -1,0 +1,1823 @@
+{
+  "seed": [
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+0 minutes'))",
+      "params": [
+        "perf-oc-1",
+        "Parent-teacher conferences",
+        "Room 12",
+        "Fifteen minutes each. Please arrive five minutes early.",
+        "no",
+        "open",
+        "{{me}}",
+        "Perf Admin"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+11 minutes'))",
+      "params": [
+        "perf-sl-01",
+        "perf-oc-1",
+        "{{date:3}}",
+        "14:00",
+        "14:15",
+        "2:00–2:15 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-18 days','-3 minutes'))",
+      "params": [
+        "perf-bk-001",
+        "perf-oc-1",
+        "perf-sl-01",
+        "Jamal Brooks",
+        "555-0101"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+12 minutes'))",
+      "params": [
+        "perf-sl-02",
+        "perf-oc-1",
+        "{{date:3}}",
+        "14:15",
+        "14:30",
+        "2:15–2:30 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-17 days','-6 minutes'))",
+      "params": [
+        "perf-bk-002",
+        "perf-oc-1",
+        "perf-sl-02",
+        "Keiko Yamamoto",
+        "555-0102"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+13 minutes'))",
+      "params": [
+        "perf-sl-03",
+        "perf-oc-1",
+        "{{date:3}}",
+        "14:30",
+        "14:45",
+        "2:30–2:45 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-16 days','-9 minutes'))",
+      "params": [
+        "perf-bk-003",
+        "perf-oc-1",
+        "perf-sl-03",
+        "Ken Ito"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+14 minutes'))",
+      "params": [
+        "perf-sl-04",
+        "perf-oc-1",
+        "{{date:3}}",
+        "14:45",
+        "15:00",
+        "2:45–3:00 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+15 minutes'))",
+      "params": [
+        "perf-sl-05",
+        "perf-oc-1",
+        "{{date:3}}",
+        "15:00",
+        "15:15",
+        "3:00–3:15 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-15 days','-12 minutes'))",
+      "params": [
+        "perf-bk-004",
+        "perf-oc-1",
+        "perf-sl-05",
+        "Sofia Haddad",
+        "555-0104",
+        "First time, where do I park?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+16 minutes'))",
+      "params": [
+        "perf-sl-06",
+        "perf-oc-1",
+        "{{date:3}}",
+        "15:15",
+        "15:30",
+        "3:15–3:30 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-19 days','-15 minutes'))",
+      "params": [
+        "perf-bk-005",
+        "perf-oc-1",
+        "perf-sl-06",
+        "Hector Ramirez",
+        "555-0105"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+17 minutes'))",
+      "params": [
+        "perf-sl-07",
+        "perf-oc-1",
+        "{{date:3}}",
+        "15:30",
+        "15:45",
+        "3:30–3:45 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-18 days','-18 minutes'))",
+      "params": [
+        "perf-bk-006",
+        "perf-oc-1",
+        "perf-sl-07",
+        "Priya Nair"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+18 minutes'))",
+      "params": [
+        "perf-sl-08",
+        "perf-oc-1",
+        "{{date:3}}",
+        "15:45",
+        "16:00",
+        "3:45–4:00 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+19 minutes'))",
+      "params": [
+        "perf-sl-09",
+        "perf-oc-1",
+        "{{date:4}}",
+        "14:00",
+        "14:15",
+        "2:00–2:15 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-17 days','-21 minutes'))",
+      "params": [
+        "perf-bk-007",
+        "perf-oc-1",
+        "perf-sl-09",
+        "Liam Petrov",
+        "555-0107"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+20 minutes'))",
+      "params": [
+        "perf-sl-10",
+        "perf-oc-1",
+        "{{date:4}}",
+        "14:15",
+        "14:30",
+        "2:15–2:30 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-16 days','-24 minutes'))",
+      "params": [
+        "perf-bk-008",
+        "perf-oc-1",
+        "perf-sl-10",
+        "Nadia Sullivan",
+        "555-0108",
+        "Will pay cash."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+21 minutes'))",
+      "params": [
+        "perf-sl-11",
+        "perf-oc-1",
+        "{{date:4}}",
+        "14:30",
+        "14:45",
+        "2:30–2:45 PM",
+        "Parent-teacher conferences",
+        1,
+        "closed"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-15 days','-27 minutes'))",
+      "params": [
+        "perf-bk-009",
+        "perf-oc-1",
+        "perf-sl-11",
+        "Tom Whitfield"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+22 minutes'))",
+      "params": [
+        "perf-sl-12",
+        "perf-oc-1",
+        "{{date:4}}",
+        "14:45",
+        "15:00",
+        "2:45–3:00 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+23 minutes'))",
+      "params": [
+        "perf-sl-13",
+        "perf-oc-1",
+        "{{date:4}}",
+        "15:00",
+        "15:15",
+        "3:00–3:15 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-19 days','-30 minutes'))",
+      "params": [
+        "perf-bk-010",
+        "perf-oc-1",
+        "perf-sl-13",
+        "Grace Chen",
+        "555-0110"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+24 minutes'))",
+      "params": [
+        "perf-sl-14",
+        "perf-oc-1",
+        "{{date:4}}",
+        "15:15",
+        "15:30",
+        "3:15–3:30 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-18 days','-33 minutes'))",
+      "params": [
+        "perf-bk-011",
+        "perf-oc-1",
+        "perf-sl-14",
+        "Owen Lindqvist",
+        "555-0111"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+25 minutes'))",
+      "params": [
+        "perf-sl-15",
+        "perf-oc-1",
+        "{{date:4}}",
+        "15:30",
+        "15:45",
+        "3:30–3:45 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-17 days','-36 minutes'))",
+      "params": [
+        "perf-bk-012",
+        "perf-oc-1",
+        "perf-sl-15",
+        "Elena Castellano",
+        "Bringing my sister too."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days','+26 minutes'))",
+      "params": [
+        "perf-sl-16",
+        "perf-oc-1",
+        "{{date:4}}",
+        "15:45",
+        "16:00",
+        "3:45–4:00 PM",
+        "Parent-teacher conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+1 minutes'))",
+      "params": [
+        "perf-oc-2",
+        "Driveway sale pickup windows",
+        "The driveway",
+        "Pick a window to collect what you bought.",
+        "yes",
+        "open",
+        "{{partner}}",
+        "Perf Partner"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+27 minutes'))",
+      "params": [
+        "perf-sl-17",
+        "perf-oc-2",
+        "{{date:1}}",
+        "09:00",
+        "09:30",
+        "9:00–9:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-5 days','-39 minutes'))",
+      "params": [
+        "perf-bk-013",
+        "perf-oc-2",
+        "perf-sl-17",
+        "Andre Novak",
+        "555-0113"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-42 minutes'))",
+      "params": [
+        "perf-bk-014",
+        "perf-oc-2",
+        "perf-sl-17",
+        "Marta Okafor",
+        "555-0114"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-8 days','-45 minutes'))",
+      "params": [
+        "perf-bk-015",
+        "perf-oc-2",
+        "perf-sl-17",
+        "Jamal Brooks"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+28 minutes'))",
+      "params": [
+        "perf-sl-18",
+        "perf-oc-2",
+        "{{date:1}}",
+        "09:30",
+        "10:00",
+        "9:30–10:00 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-7 days','-48 minutes'))",
+      "params": [
+        "perf-bk-016",
+        "perf-oc-2",
+        "perf-sl-18",
+        "Keiko Yamamoto",
+        "555-0116",
+        "Can we talk about reading levels?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-6 days','-51 minutes'))",
+      "params": [
+        "perf-bk-017",
+        "perf-oc-2",
+        "perf-sl-18",
+        "Ken Ito",
+        "555-0117"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+29 minutes'))",
+      "params": [
+        "perf-sl-19",
+        "perf-oc-2",
+        "{{date:1}}",
+        "10:00",
+        "10:30",
+        "10:00–10:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-5 days','-54 minutes'))",
+      "params": [
+        "perf-bk-018",
+        "perf-oc-2",
+        "perf-sl-19",
+        "Sofia Haddad"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+30 minutes'))",
+      "params": [
+        "perf-sl-20",
+        "perf-oc-2",
+        "{{date:1}}",
+        "10:30",
+        "11:00",
+        "10:30–11:00 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+31 minutes'))",
+      "params": [
+        "perf-sl-21",
+        "perf-oc-2",
+        "{{date:1}}",
+        "11:00",
+        "11:30",
+        "11:00–11:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-57 minutes'))",
+      "params": [
+        "perf-bk-019",
+        "perf-oc-2",
+        "perf-sl-21",
+        "Hector Ramirez",
+        "555-0119"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-8 days','-60 minutes'))",
+      "params": [
+        "perf-bk-020",
+        "perf-oc-2",
+        "perf-sl-21",
+        "Priya Nair",
+        "555-0120",
+        "Running five minutes late."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-7 days','-63 minutes'))",
+      "params": [
+        "perf-bk-021",
+        "perf-oc-2",
+        "perf-sl-21",
+        "Liam Petrov"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+32 minutes'))",
+      "params": [
+        "perf-sl-22",
+        "perf-oc-2",
+        "{{date:1}}",
+        "11:30",
+        "12:00",
+        "11:30–12:00 PM",
+        "Driveway sale pickup windows",
+        3,
+        "closed"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-6 days','-66 minutes'))",
+      "params": [
+        "perf-bk-022",
+        "perf-oc-2",
+        "perf-sl-22",
+        "Nadia Sullivan",
+        "555-0122"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-5 days','-69 minutes'))",
+      "params": [
+        "perf-bk-023",
+        "perf-oc-2",
+        "perf-sl-22",
+        "Tom Whitfield",
+        "555-0123"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+33 minutes'))",
+      "params": [
+        "perf-sl-23",
+        "perf-oc-2",
+        "{{date:2}}",
+        "09:00",
+        "09:30",
+        "9:00–9:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-72 minutes'))",
+      "params": [
+        "perf-bk-024",
+        "perf-oc-2",
+        "perf-sl-23",
+        "Grace Chen",
+        "First time, where do I park?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+34 minutes'))",
+      "params": [
+        "perf-sl-24",
+        "perf-oc-2",
+        "{{date:2}}",
+        "09:30",
+        "10:00",
+        "9:30–10:00 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+35 minutes'))",
+      "params": [
+        "perf-sl-25",
+        "perf-oc-2",
+        "{{date:2}}",
+        "10:00",
+        "10:30",
+        "10:00–10:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-8 days','-75 minutes'))",
+      "params": [
+        "perf-bk-025",
+        "perf-oc-2",
+        "perf-sl-25",
+        "Owen Lindqvist",
+        "555-0125"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-7 days','-78 minutes'))",
+      "params": [
+        "perf-bk-026",
+        "perf-oc-2",
+        "perf-sl-25",
+        "Elena Castellano",
+        "555-0126"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-6 days','-81 minutes'))",
+      "params": [
+        "perf-bk-027",
+        "perf-oc-2",
+        "perf-sl-25",
+        "Andre Novak"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+36 minutes'))",
+      "params": [
+        "perf-sl-26",
+        "perf-oc-2",
+        "{{date:2}}",
+        "10:30",
+        "11:00",
+        "10:30–11:00 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-5 days','-84 minutes'))",
+      "params": [
+        "perf-bk-028",
+        "perf-oc-2",
+        "perf-sl-26",
+        "Marta Okafor",
+        "555-0128",
+        "Will pay cash."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-87 minutes'))",
+      "params": [
+        "perf-bk-029",
+        "perf-oc-2",
+        "perf-sl-26",
+        "Jamal Brooks",
+        "555-0129"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+37 minutes'))",
+      "params": [
+        "perf-sl-27",
+        "perf-oc-2",
+        "{{date:2}}",
+        "11:00",
+        "11:30",
+        "11:00–11:30 AM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-8 days','-90 minutes'))",
+      "params": [
+        "perf-bk-030",
+        "perf-oc-2",
+        "perf-sl-27",
+        "Keiko Yamamoto"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+38 minutes'))",
+      "params": [
+        "perf-sl-28",
+        "perf-oc-2",
+        "{{date:2}}",
+        "11:30",
+        "12:00",
+        "11:30–12:00 PM",
+        "Driveway sale pickup windows",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+2 minutes'))",
+      "params": [
+        "perf-oc-3",
+        "Soccer tryouts",
+        "Field 3, Riverside Park",
+        "Bring shin guards and water.",
+        "yes",
+        "open",
+        "{{adult2}}",
+        "Perf Adult"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+39 minutes'))",
+      "params": [
+        "perf-sl-29",
+        "perf-oc-3",
+        "{{date:8}}",
+        "09:00",
+        "09:45",
+        "9:00–9:45 AM",
+        "Soccer tryouts",
+        8,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-28 days','-93 minutes'))",
+      "params": [
+        "perf-bk-031",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Ken Ito",
+        "555-0131"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-27 days','-96 minutes'))",
+      "params": [
+        "perf-bk-032",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Sofia Haddad",
+        "555-0132",
+        "Bringing my sister too."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-26 days','-99 minutes'))",
+      "params": [
+        "perf-bk-033",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Hector Ramirez"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-25 days','-102 minutes'))",
+      "params": [
+        "perf-bk-034",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Priya Nair",
+        "555-0134"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-29 days','-105 minutes'))",
+      "params": [
+        "perf-bk-035",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Liam Petrov",
+        "555-0135"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-28 days','-108 minutes'))",
+      "params": [
+        "perf-bk-036",
+        "perf-oc-3",
+        "perf-sl-29",
+        "Nadia Sullivan",
+        "Can we talk about reading levels?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+40 minutes'))",
+      "params": [
+        "perf-sl-30",
+        "perf-oc-3",
+        "{{date:8}}",
+        "09:45",
+        "10:30",
+        "9:45–10:30 AM",
+        "Soccer tryouts",
+        8,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+41 minutes'))",
+      "params": [
+        "perf-sl-31",
+        "perf-oc-3",
+        "{{date:8}}",
+        "10:30",
+        "11:15",
+        "10:30–11:15 AM",
+        "Soccer tryouts",
+        8,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-27 days','-111 minutes'))",
+      "params": [
+        "perf-bk-037",
+        "perf-oc-3",
+        "perf-sl-31",
+        "Tom Whitfield",
+        "555-0137"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-26 days','-114 minutes'))",
+      "params": [
+        "perf-bk-038",
+        "perf-oc-3",
+        "perf-sl-31",
+        "Grace Chen",
+        "555-0138"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-25 days','-117 minutes'))",
+      "params": [
+        "perf-bk-039",
+        "perf-oc-3",
+        "perf-sl-31",
+        "Owen Lindqvist"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+42 minutes'))",
+      "params": [
+        "perf-sl-32",
+        "perf-oc-3",
+        "{{date:8}}",
+        "11:15",
+        "12:00",
+        "11:15–12:00 PM",
+        "Soccer tryouts",
+        8,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-29 days','-120 minutes'))",
+      "params": [
+        "perf-bk-040",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Elena Castellano",
+        "555-0140",
+        "Running five minutes late."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-28 days','-123 minutes'))",
+      "params": [
+        "perf-bk-041",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Andre Novak",
+        "555-0141"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-27 days','-126 minutes'))",
+      "params": [
+        "perf-bk-042",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Marta Okafor"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-26 days','-129 minutes'))",
+      "params": [
+        "perf-bk-043",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Jamal Brooks",
+        "555-0143"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-25 days','-132 minutes'))",
+      "params": [
+        "perf-bk-044",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Keiko Yamamoto",
+        "555-0144",
+        "First time, where do I park?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-29 days','-135 minutes'))",
+      "params": [
+        "perf-bk-045",
+        "perf-oc-3",
+        "perf-sl-32",
+        "Ken Ito"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+43 minutes'))",
+      "params": [
+        "perf-sl-33",
+        "perf-oc-3",
+        "{{date:8}}",
+        "12:00",
+        "12:45",
+        "12:00–12:45 PM",
+        "Soccer tryouts",
+        8,
+        "closed"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days','+44 minutes'))",
+      "params": [
+        "perf-sl-34",
+        "perf-oc-3",
+        "{{date:8}}",
+        "12:45",
+        "13:30",
+        "12:45–1:30 PM",
+        "Soccer tryouts",
+        8,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-28 days','-138 minutes'))",
+      "params": [
+        "perf-bk-046",
+        "perf-oc-3",
+        "perf-sl-34",
+        "Sofia Haddad",
+        "555-0146"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-27 days','-141 minutes'))",
+      "params": [
+        "perf-bk-047",
+        "perf-oc-3",
+        "perf-sl-34",
+        "Hector Ramirez",
+        "555-0147"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-26 days','-144 minutes'))",
+      "params": [
+        "perf-bk-048",
+        "perf-oc-3",
+        "perf-sl-34",
+        "Priya Nair",
+        "Will pay cash."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+3 minutes'))",
+      "params": [
+        "perf-oc-4",
+        "Piano recital rehearsal slots",
+        "Community hall",
+        "Twenty minutes on the stage piano.",
+        "no",
+        "open",
+        "{{me}}",
+        "Perf Admin"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+45 minutes'))",
+      "params": [
+        "perf-sl-35",
+        "perf-oc-4",
+        "{{date:5}}",
+        "16:00",
+        "16:20",
+        "4:00–4:20 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-9 days','-147 minutes'))",
+      "params": [
+        "perf-bk-049",
+        "perf-oc-4",
+        "perf-sl-35",
+        "Liam Petrov",
+        "555-0149"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+46 minutes'))",
+      "params": [
+        "perf-sl-36",
+        "perf-oc-4",
+        "{{date:5}}",
+        "16:20",
+        "16:40",
+        "4:20–4:40 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+47 minutes'))",
+      "params": [
+        "perf-sl-37",
+        "perf-oc-4",
+        "{{date:5}}",
+        "16:40",
+        "17:00",
+        "4:40–5:00 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-13 days','-150 minutes'))",
+      "params": [
+        "perf-bk-050",
+        "perf-oc-4",
+        "perf-sl-37",
+        "Nadia Sullivan",
+        "555-0150"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+48 minutes'))",
+      "params": [
+        "perf-sl-38",
+        "perf-oc-4",
+        "{{date:5}}",
+        "17:00",
+        "17:20",
+        "5:00–5:20 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-12 days','-153 minutes'))",
+      "params": [
+        "perf-bk-051",
+        "perf-oc-4",
+        "perf-sl-38",
+        "Tom Whitfield"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+49 minutes'))",
+      "params": [
+        "perf-sl-39",
+        "perf-oc-4",
+        "{{date:5}}",
+        "17:20",
+        "17:40",
+        "5:20–5:40 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-11 days','-156 minutes'))",
+      "params": [
+        "perf-bk-052",
+        "perf-oc-4",
+        "perf-sl-39",
+        "Grace Chen",
+        "555-0152",
+        "Bringing my sister too."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+50 minutes'))",
+      "params": [
+        "perf-sl-40",
+        "perf-oc-4",
+        "{{date:5}}",
+        "17:40",
+        "18:00",
+        "5:40–6:00 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+51 minutes'))",
+      "params": [
+        "perf-sl-41",
+        "perf-oc-4",
+        "{{date:6}}",
+        "16:00",
+        "16:20",
+        "4:00–4:20 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-10 days','-159 minutes'))",
+      "params": [
+        "perf-bk-053",
+        "perf-oc-4",
+        "perf-sl-41",
+        "Owen Lindqvist",
+        "555-0153"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+52 minutes'))",
+      "params": [
+        "perf-sl-42",
+        "perf-oc-4",
+        "{{date:6}}",
+        "16:20",
+        "16:40",
+        "4:20–4:40 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-9 days','-162 minutes'))",
+      "params": [
+        "perf-bk-054",
+        "perf-oc-4",
+        "perf-sl-42",
+        "Elena Castellano"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+53 minutes'))",
+      "params": [
+        "perf-sl-43",
+        "perf-oc-4",
+        "{{date:6}}",
+        "16:40",
+        "17:00",
+        "4:40–5:00 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-13 days','-165 minutes'))",
+      "params": [
+        "perf-bk-055",
+        "perf-oc-4",
+        "perf-sl-43",
+        "Andre Novak",
+        "555-0155"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+54 minutes'))",
+      "params": [
+        "perf-sl-44",
+        "perf-oc-4",
+        "{{date:6}}",
+        "17:00",
+        "17:20",
+        "5:00–5:20 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "closed"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+55 minutes'))",
+      "params": [
+        "perf-sl-45",
+        "perf-oc-4",
+        "{{date:6}}",
+        "17:20",
+        "17:40",
+        "5:20–5:40 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-12 days','-168 minutes'))",
+      "params": [
+        "perf-bk-056",
+        "perf-oc-4",
+        "perf-sl-45",
+        "Marta Okafor",
+        "555-0156",
+        "Can we talk about reading levels?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days','+56 minutes'))",
+      "params": [
+        "perf-sl-46",
+        "perf-oc-4",
+        "{{date:6}}",
+        "17:40",
+        "18:00",
+        "5:40–6:00 PM",
+        "Piano recital rehearsal slots",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-11 days','-171 minutes'))",
+      "params": [
+        "perf-bk-057",
+        "perf-oc-4",
+        "perf-sl-46",
+        "Jamal Brooks"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+4 minutes'))",
+      "params": [
+        "perf-oc-5",
+        "Flu shot clinic",
+        "Clubhouse",
+        "Walk-ins welcome if a window has room.",
+        "no",
+        "open",
+        "{{partner}}",
+        "Perf Partner"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+57 minutes'))",
+      "params": [
+        "perf-sl-47",
+        "perf-oc-5",
+        "{{date:12}}",
+        "10:00",
+        "10:30",
+        "10:00–10:30 AM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-2 days','-174 minutes'))",
+      "params": [
+        "perf-bk-058",
+        "perf-oc-5",
+        "perf-sl-47",
+        "Keiko Yamamoto",
+        "555-0158"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+58 minutes'))",
+      "params": [
+        "perf-sl-48",
+        "perf-oc-5",
+        "{{date:12}}",
+        "10:30",
+        "11:00",
+        "10:30–11:00 AM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-1 days','-177 minutes'))",
+      "params": [
+        "perf-bk-059",
+        "perf-oc-5",
+        "perf-sl-48",
+        "Ken Ito",
+        "555-0159"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-5 days','-180 minutes'))",
+      "params": [
+        "perf-bk-060",
+        "perf-oc-5",
+        "perf-sl-48",
+        "Sofia Haddad",
+        "Running five minutes late."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-183 minutes'))",
+      "params": [
+        "perf-bk-061",
+        "perf-oc-5",
+        "perf-sl-48",
+        "Hector Ramirez",
+        "555-0161"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-3 days','-186 minutes'))",
+      "params": [
+        "perf-bk-062",
+        "perf-oc-5",
+        "perf-sl-48",
+        "Priya Nair",
+        "555-0162"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+59 minutes'))",
+      "params": [
+        "perf-sl-49",
+        "perf-oc-5",
+        "{{date:12}}",
+        "11:00",
+        "11:30",
+        "11:00–11:30 AM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-2 days','-189 minutes'))",
+      "params": [
+        "perf-bk-063",
+        "perf-oc-5",
+        "perf-sl-49",
+        "Liam Petrov"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-1 days','-192 minutes'))",
+      "params": [
+        "perf-bk-064",
+        "perf-oc-5",
+        "perf-sl-49",
+        "Nadia Sullivan",
+        "555-0164",
+        "First time, where do I park?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+60 minutes'))",
+      "params": [
+        "perf-sl-50",
+        "perf-oc-5",
+        "{{date:12}}",
+        "11:30",
+        "12:00",
+        "11:30–12:00 PM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+61 minutes'))",
+      "params": [
+        "perf-sl-51",
+        "perf-oc-5",
+        "{{date:12}}",
+        "12:00",
+        "12:30",
+        "12:00–12:30 PM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-5 days','-195 minutes'))",
+      "params": [
+        "perf-bk-065",
+        "perf-oc-5",
+        "perf-sl-51",
+        "Tom Whitfield",
+        "555-0165"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-4 days','-198 minutes'))",
+      "params": [
+        "perf-bk-066",
+        "perf-oc-5",
+        "perf-sl-51",
+        "Grace Chen"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-3 days','-201 minutes'))",
+      "params": [
+        "perf-bk-067",
+        "perf-oc-5",
+        "perf-sl-51",
+        "Owen Lindqvist",
+        "555-0167"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+62 minutes'))",
+      "params": [
+        "perf-sl-52",
+        "perf-oc-5",
+        "{{date:12}}",
+        "12:30",
+        "13:00",
+        "12:30–1:00 PM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-2 days','-204 minutes'))",
+      "params": [
+        "perf-bk-068",
+        "perf-oc-5",
+        "perf-sl-52",
+        "Elena Castellano",
+        "555-0168",
+        "Will pay cash."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+63 minutes'))",
+      "params": [
+        "perf-sl-53",
+        "perf-oc-5",
+        "{{date:12}}",
+        "13:00",
+        "13:30",
+        "1:00–1:30 PM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-1 days','-207 minutes'))",
+      "params": [
+        "perf-bk-069",
+        "perf-oc-5",
+        "perf-sl-53",
+        "Andre Novak"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-5 days','-210 minutes'))",
+      "params": [
+        "perf-bk-070",
+        "perf-oc-5",
+        "perf-sl-53",
+        "Marta Okafor",
+        "555-0170"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-4 days','-213 minutes'))",
+      "params": [
+        "perf-bk-071",
+        "perf-oc-5",
+        "perf-sl-53",
+        "Jamal Brooks",
+        "555-0171"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-3 days','-216 minutes'))",
+      "params": [
+        "perf-bk-072",
+        "perf-oc-5",
+        "perf-sl-53",
+        "Keiko Yamamoto",
+        "Bringing my sister too."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+64 minutes'))",
+      "params": [
+        "perf-sl-54",
+        "perf-oc-5",
+        "{{date:12}}",
+        "13:30",
+        "14:00",
+        "1:30–2:00 PM",
+        "Flu shot clinic",
+        4,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-2 days','-219 minutes'))",
+      "params": [
+        "perf-bk-073",
+        "perf-oc-5",
+        "perf-sl-54",
+        "Ken Ito",
+        "555-0173"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-1 days','-222 minutes'))",
+      "params": [
+        "perf-bk-074",
+        "perf-oc-5",
+        "perf-sl-54",
+        "Sofia Haddad",
+        "555-0174"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, description, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+5 minutes'))",
+      "params": [
+        "perf-oc-6",
+        "Spring conferences",
+        "Room 12",
+        "Closed. Thanks to everyone who came.",
+        "no",
+        "closed",
+        "{{adult2}}",
+        "Perf Adult"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+65 minutes'))",
+      "params": [
+        "perf-sl-55",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "14:00",
+        "14:15",
+        "2:00–2:15 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-149 days','-225 minutes'))",
+      "params": [
+        "perf-bk-075",
+        "perf-oc-6",
+        "perf-sl-55",
+        "Hector Ramirez"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+66 minutes'))",
+      "params": [
+        "perf-sl-56",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "14:15",
+        "14:30",
+        "2:15–2:30 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+67 minutes'))",
+      "params": [
+        "perf-sl-57",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "14:30",
+        "14:45",
+        "2:30–2:45 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-148 days','-228 minutes'))",
+      "params": [
+        "perf-bk-076",
+        "perf-oc-6",
+        "perf-sl-57",
+        "Priya Nair",
+        "555-0176",
+        "Can we talk about reading levels?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+68 minutes'))",
+      "params": [
+        "perf-sl-58",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "14:45",
+        "15:00",
+        "2:45–3:00 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-147 days','-231 minutes'))",
+      "params": [
+        "perf-bk-077",
+        "perf-oc-6",
+        "perf-sl-58",
+        "Liam Petrov",
+        "555-0177"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+69 minutes'))",
+      "params": [
+        "perf-sl-59",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "15:00",
+        "15:15",
+        "3:00–3:15 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-146 days','-234 minutes'))",
+      "params": [
+        "perf-bk-078",
+        "perf-oc-6",
+        "perf-sl-59",
+        "Nadia Sullivan"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-150 days','+70 minutes'))",
+      "params": [
+        "perf-sl-60",
+        "perf-oc-6",
+        "{{date:-120}}",
+        "15:15",
+        "15:30",
+        "3:15–3:30 PM",
+        "Spring conferences",
+        1,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__occasions (id, title, location, show_bookings, status, created_by, created_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+6 minutes'))",
+      "params": [
+        "perf-oc-7",
+        "Garage clean-out helpers",
+        "Our garage",
+        "yes",
+        "closed",
+        "{{me}}",
+        "Perf Admin"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+71 minutes'))",
+      "params": [
+        "perf-sl-61",
+        "perf-oc-7",
+        "{{date:-60}}",
+        "09:00",
+        "10:00",
+        "9:00–10:00 AM",
+        "Garage clean-out helpers",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-70 days','-237 minutes'))",
+      "params": [
+        "perf-bk-079",
+        "perf-oc-7",
+        "perf-sl-61",
+        "Tom Whitfield",
+        "555-0179"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, guest_note, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now','-74 days','-240 minutes'))",
+      "params": [
+        "perf-bk-080",
+        "perf-oc-7",
+        "perf-sl-61",
+        "Grace Chen",
+        "555-0180",
+        "Running five minutes late."
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, created_at) VALUES (?, ?, ?, ?, datetime('now','-73 days','-243 minutes'))",
+      "params": [
+        "perf-bk-081",
+        "perf-oc-7",
+        "perf-sl-61",
+        "Owen Lindqvist"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+72 minutes'))",
+      "params": [
+        "perf-sl-62",
+        "perf-oc-7",
+        "{{date:-60}}",
+        "10:00",
+        "11:00",
+        "10:00–11:00 AM",
+        "Garage clean-out helpers",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-72 days','-246 minutes'))",
+      "params": [
+        "perf-bk-082",
+        "perf-oc-7",
+        "perf-sl-62",
+        "Elena Castellano",
+        "555-0182"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_contact, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-71 days','-249 minutes'))",
+      "params": [
+        "perf-bk-083",
+        "perf-oc-7",
+        "perf-sl-62",
+        "Andre Novak",
+        "555-0183"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+73 minutes'))",
+      "params": [
+        "perf-sl-63",
+        "perf-oc-7",
+        "{{date:-60}}",
+        "11:00",
+        "12:00",
+        "11:00–12:00 PM",
+        "Garage clean-out helpers",
+        3,
+        "open"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__bookings (id, occasion_id, slot_id, guest_name, guest_note, created_at) VALUES (?, ?, ?, ?, ?, datetime('now','-70 days','-252 minutes'))",
+      "params": [
+        "perf-bk-084",
+        "perf-oc-7",
+        "perf-sl-63",
+        "Marta Okafor",
+        "First time, where do I park?"
+      ]
+    },
+    {
+      "sql": "INSERT INTO app_booking_slots__slots (id, occasion_id, slot_date, start_time, end_time, label, occasion_title, capacity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+74 minutes'))",
+      "params": [
+        "perf-sl-64",
+        "perf-oc-7",
+        "{{date:-60}}",
+        "12:00",
+        "13:00",
+        "12:00–1:00 PM",
+        "Garage clean-out helpers",
+        3,
+        "open"
+      ]
+    }
+  ]
+}
