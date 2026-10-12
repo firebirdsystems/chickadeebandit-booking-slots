@@ -122,6 +122,8 @@
       background: var(--surface, #fff); color: var(--text, inherit);
     }
     .search-input:focus { outline: none; border-color: var(--accent, #6366f1); }
+    .load-error { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--hub-tint-danger, #fee2e2); color: var(--hub-tint-danger-fg, #b91c1c); font-size: 0.9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .load-error-retry { background: none; border: 1px solid currentColor; border-radius: 8px; padding: 5px 10px; font: inherit; font-weight: 600; color: inherit; cursor: pointer; flex-shrink: 0; }
   </style>
   <base href="/run/booking-slots/">
 </head>
@@ -212,8 +214,8 @@ async function dbq(sql, params = []) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sql, params }),
   });
-  const json = await res.json();
-  if (json.error) throw new Error(json.error);
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
   return json;
 }
 async function dbBatch(statements) {
@@ -222,8 +224,8 @@ async function dbBatch(statements) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ statements }),
   });
-  const json = await res.json();
-  if (json.error) throw new Error(json.error);
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
   return json;
 }
 // LIMIT/OFFSET are inlined as integers rather than bound as params, and that is
@@ -281,6 +283,7 @@ function publish(type, subject_id, payload) {
 
 // ── data ──
 async function loadMembers() {
+  let unread = null;
   if (!CONTEXT) {
     members = [
       { id: "demo-1", name: "Alex", role: "adult" },
@@ -288,12 +291,18 @@ async function loadMembers() {
       { id: "demo-3", name: "Casey", role: "child" },
     ];
   } else {
+    // A member list that could not be read is a failed load, not a household with nobody in it.
     try {
       const res = await fetch(`${CONTEXT}?keys=family.members`);
-      members = ((await res.json())["family.members"]) ?? [];
-    } catch { members = []; }
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data !== "object" || data.error) throw new Error("Couldn’t reach the hub. Try again.");
+      // A 200 can still name a key the hub failed to read.
+      if (Array.isArray(data.$errors) && data.$errors.includes("family.members")) throw new Error("Couldn’t reach the hub. Try again.");
+      members = data["family.members"] ?? [];
+    } catch (e) { unread = e; }
   }
   currentMember = ME ?? members[0] ?? { id: "guest", name: "Guest", role: "adult" };
+  if (unread) throw unread;
 }
 
 function seedDemo() {
@@ -411,10 +420,14 @@ function loadClosed() {
 // `deepLink` is honoured on the FIRST load only. Re-applying ?occasionId on
 // every refresh would drag the organizer back into that occasion's detail view
 // every time they pressed Refresh after backing out of it.
+let loaded = false;
+let loadFailed = false;
 async function refresh({ deepLink = false } = {}) {
   clearMessages();
   try {
     await Promise.all([loadMembers(), loadData()]);
+    loaded = true;
+    loadFailed = false;
     if (selectedOccasionId && !occasions.some(o => o.id === selectedOccasionId)) selectedOccasionId = null;
     if (deepLink) await handleDeepLink();
     render();
@@ -422,7 +435,12 @@ async function refresh({ deepLink = false } = {}) {
     // here to notice it. Loading is the moment the app finds out, so it is
     // also the moment the export can catch up.
     syncCalendar();
-  } catch (e) { error = e.message; render(); }
+  } catch (e) {
+    // Only a failed FIRST load raises the banner; a failed manual refresh
+    // leaves the sheets already on screen and says so inline.
+    if (loaded) error = e.message; else loadFailed = true;
+    render();
+  }
 }
 async function handleDeepLink() {
   const occasionId = new URLSearchParams(window.location.search).get("occasionId");
@@ -776,6 +794,7 @@ async function deleteOccasion(occasionId) {
 
 // ── render ──
 function renderMessages() {
+  if (loadFailed) return `<div class="load-error" data-testid="load-error" role="alert"><span>Couldn’t load the booking sheets.</span> <button type="button" class="load-error-retry" data-testid="load-retry">Try again</button></div>`;
   return `${error ? `<div class="error">${esc(error)}</div>` : ""}${notice ? `<div class="notice">${esc(notice)}</div>` : ""}`;
 }
 function renderTabs() {
@@ -805,7 +824,7 @@ function renderList() {
   return `
     <div class="topbar">
       <div><h1>Booking Slots</h1><p class="muted tiny">Type in the time slots, share one link, let people book a time.</p></div>
-      ${canManage() ? `<button class="btn" data-testid="new-occasion" data-view-create>New booking sheet</button>` : ""}
+      ${canManage() && !loadFailed ? `<button class="btn" data-testid="new-occasion" data-view-create>New booking sheet</button>` : ""}
     </div>
     ${renderMessages()}
     ${renderTabs()}
@@ -820,6 +839,7 @@ function renderOccasionList() {
   const visible = occasions.filter(o => (o.status ?? "open") === wanted);
   const shown = searchQ ? visible.filter(o => searchMatch(searchQ, searchableFields(o))) : visible;
   if (shown.length) return shown.map(renderOccasionCard).join("");
+  if (loadFailed) return "";
   if (searchQ) return `<div class="card empty">No booking sheets match "${esc(searchQ)}".</div>`;
   return `<div class="card empty">${wanted === "closed" ? "No closed booking sheets." : "No booking sheets yet."}</div>`;
 }
@@ -1099,6 +1119,7 @@ document.addEventListener("click", (event) => {
     return;
   }
   if (t.matches("[data-refresh]")) { refresh(); return; }
+  if (t.matches('[data-testid="load-retry"]')) { refresh({ deepLink: true }); return; }
   if (t.hasAttribute("data-edit")) { editingOccasionId = t.getAttribute("data-edit"); view = "create"; clearMessages(); render(); return; }
   if (t.matches("[data-modal-cancel]")) { closeModal(); return; }
   if (t.hasAttribute("data-toggle")) { toggleSlotClosed(t.getAttribute("data-toggle")); return; }
