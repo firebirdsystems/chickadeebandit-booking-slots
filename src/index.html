@@ -438,7 +438,7 @@ async function refresh({ deepLink = false } = {}) {
   } catch (e) {
     // Only a failed FIRST load raises the banner; a failed manual refresh
     // leaves the sheets already on screen and says so inline.
-    if (loaded) error = e.message; else loadFailed = true;
+    if (loaded) { console.error(e); error = "Couldn’t load the booking sheets."; } else loadFailed = true;
     render();
   }
 }
@@ -460,6 +460,15 @@ async function handleDeepLink() {
 function clearMessages() { error = ""; notice = ""; }
 function showError(m) { error = m; notice = ""; render(); }
 function showNotice(m) { notice = m; error = ""; render(); }
+// A save the hub refused. These forms are part of the page, so a render()
+// would redraw them empty: the message goes in the form's own error line and
+// what was typed stays where it is.
+function saveFailed(form) {
+  const line = form.querySelector("[data-form-error]");
+  if (!line) return showError("Couldn’t save — try again.");
+  line.textContent = "Couldn’t save — try again.";
+  line.hidden = false;
+}
 
 // ── mutations ──
 async function saveOccasion(form) {
@@ -480,7 +489,7 @@ async function saveOccasion(form) {
     }
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = editingOccasionId ? "Save changes" : "Open booking sheet"; }
-    showError(e.message);
+    saveFailed(form);
   }
 }
 
@@ -592,7 +601,7 @@ async function addSlots(form) {
     syncCalendar();
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "Add"; }
-    showError(e.message);
+    saveFailed(form);
   }
 }
 
@@ -637,7 +646,8 @@ async function removeSlot(slotId) {
         slot.status = previousStatus;
       } catch { /* Staying closed is safer than reopening after an uncertain failure. */ }
     }
-    showError(e.message);
+    console.error(e);
+    showError("Couldn’t remove the slot — try again.");
   }
 }
 
@@ -661,7 +671,7 @@ async function toggleSlotClosed(slotId) {
     if (i !== -1) slots[i] = { ...slots[i], status };
     render();
     syncCalendar();
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t update the slot — try again."); }
 }
 
 // How many bookings this slot accepts. The hub enforces it atomically inside
@@ -701,7 +711,7 @@ async function setCapacity(slotId, raw) {
     const i = slots.findIndex(s => s.id === slotId);
     if (i !== -1) slots[i] = { ...slots[i], capacity: next };
     render();
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t change the capacity — try again."); }
 }
 
 async function setOccasionStatus(occasionId, status) {
@@ -720,7 +730,7 @@ async function setOccasionStatus(occasionId, status) {
     if (i !== -1) occasions[i] = { ...occasions[i], status };
     showNotice(status === "closed" ? "Booking sheet closed." : "Booking sheet reopened.");
     syncCalendar();
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t update the booking sheet — try again."); }
 }
 
 // The public who's-booked feed is gated per occasion (feed parent_where reads
@@ -737,7 +747,8 @@ async function setShowBookings(occasionId, show) {
   } catch (e) {
     const checkbox = modalEl?.querySelector("[data-show-bookings]");
     if (checkbox) checkbox.checked = occasions.find(o => o.id === occasionId)?.show_bookings === "yes";
-    hubAlert("Couldn't update the setting", { description: e.message });
+    console.error(e);
+    hubAlert("Couldn’t update the setting — try again.");
   }
 }
 
@@ -788,7 +799,8 @@ async function deleteOccasion(occasionId) {
         occasion.status = previousStatus;
       } catch { /* Staying closed is safer than reopening after an uncertain failure. */ }
     }
-    showError(e.message);
+    console.error(e);
+    showError("Couldn’t delete the booking sheet — try again.");
   }
 }
 
@@ -944,6 +956,7 @@ function renderDetail() {
           <div class="field"><label for="s-every">Every (min)</label><input id="s-every" name="every_mins" type="number" min="5" step="5" placeholder="—" data-testid="field-slot-every" /></div>
           <div class="field"><label for="s-cap">Spots</label><input id="s-cap" name="capacity" type="number" min="1" value="1" data-testid="field-slot-capacity" /></div>
           <button class="btn btn-sm" type="submit" data-testid="add-slots">Add</button>
+          <div class="error" data-form-error data-testid="add-slots-error" role="alert" style="grid-column:1 / -1;margin:0" hidden></div>
         </form>
         <p class="muted tiny" style="margin-top:6px">Set "Every" to split the window into a run of slots — 2:00 to 5:00 every 15 minutes is twelve slots.</p>` : ""}
     </section>`;
@@ -962,6 +975,7 @@ function renderForm() {
         <div class="field"><label for="f-location">Where</label><input id="f-location" name="location" data-testid="field-location" value="${v("location")}" placeholder="Room 12" /></div>
       </div>
       <div class="field"><label for="f-desc">About</label><textarea id="f-desc" name="description" data-testid="field-description" placeholder="What this is, and anything people should know before booking.">${v("description")}</textarea></div>
+      <div class="error" data-form-error data-testid="occasion-error" role="alert" hidden></div>
       <div class="actions">
         <button class="btn" type="submit" data-testid="submit-occasion">${occasion ? "Save changes" : "Open booking sheet"}</button>
       </div>
@@ -994,7 +1008,8 @@ async function openShareModal(occasionId) {
   try {
     status = await share.listAll();
   } catch (err) {
-    hubAlert("Couldn't load share links", { description: err.message });
+    console.error(err);
+    hubAlert("Couldn't load share links");
     return;
   }
   _shareLinks = status.links;
@@ -1090,7 +1105,7 @@ async function copyShareLink(id) {
 async function revokeShareLink(id, occasionId) {
   if (!await hubConfirm({ message: "Revoke this share link?", description: "Anyone using it will immediately lose access.", confirmLabel: "Revoke" })) return;
   try { await share.revoke(id); await openShareModal(occasionId); }
-  catch (err) { hubAlert("Couldn't revoke share link", { description: err.message }); }
+  catch (err) { console.error(err); hubAlert("Couldn’t revoke the share link — try again."); }
 }
 
 function render() {
@@ -1115,7 +1130,7 @@ document.addEventListener("click", (event) => {
     clearMessages();
     render();
     // The closed archive is not loaded up front; pull it on first ask, then redraw.
-    if (view === "closed") loadClosed().then(render).catch((e) => { error = e.message; render(); });
+    if (view === "closed") loadClosed().then(render).catch((e) => { console.error(e); error = "Couldn’t load the closed booking sheets."; render(); });
     return;
   }
   if (t.matches("[data-refresh]")) { refresh(); return; }
