@@ -476,6 +476,8 @@ function formError(form, message) {
 // ── mutations ──
 async function saveOccasion(form) {
   if (!canManage()) return showError("Only adults can open a booking sheet.");
+  const errorLine = form.querySelector("[data-form-error]");
+  if (errorLine) errorLine.hidden = true;
   const f = (name) => (form[name]?.value ?? "").trim();
   const title = f("title");
   if (!title) { form.title.focus(); return; }
