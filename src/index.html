@@ -463,10 +463,13 @@ function showNotice(m) { notice = m; error = ""; render(); }
 // A save the hub refused. These forms are part of the page, so a render()
 // would redraw them empty: the message goes in the form's own error line and
 // what was typed stays where it is.
-function saveFailed(form) {
+function saveFailed(form) { formError(form, "Couldn’t save — try again."); }
+// Same line, for a message about what was typed (a window that cannot be a
+// slot): the fields have to survive so the user can correct them.
+function formError(form, message) {
   const line = form.querySelector("[data-form-error]");
-  if (!line) return showError("Couldn’t save — try again.");
-  line.textContent = "Couldn’t save — try again.";
+  if (!line) return showError(message);
+  line.textContent = message;
   line.hidden = false;
 }
 
@@ -568,6 +571,8 @@ async function addSlots(form) {
   if (!canManage()) return showError("Only adults can add slots.");
   const occasion = selectedOccasion();
   if (!occasion) return;
+  const errorLine = form.querySelector("[data-form-error]");
+  if (errorLine) errorLine.hidden = true;
   const slotDate = form.slot_date.value;
   if (!slotDate) { form.slot_date.focus(); return; }
   const from = form.start_time.value;
@@ -576,15 +581,18 @@ async function addSlots(form) {
   const fromMinutes = timeToMinutes(from);
   const toMinutes = to ? timeToMinutes(to) : null;
   if (to && (toMinutes === null || toMinutes <= fromMinutes)) {
-    return showError("End time must be after the start time.");
+    return formError(form, "End time must be after the start time.");
   }
   // "Every N minutes" from `from` to `to` generates a run of slots — the
   // conference-afternoon case. With no interval (or no end) the window is one
   // slot. Bounded inside slotTimes().
   const times = slotTimes(from, to, form.every_mins.value);
-  if (!times.length) { form.start_time.focus(); return; }
+  if (!times.length) {
+    form.end_time.focus();
+    return formError(form, "That window is shorter than the interval. Lengthen the window or use a shorter interval.");
+  }
   if (times.length > ATOMIC_SLOT_LIMIT) {
-    return showError(`That window creates more than ${ATOMIC_SLOT_LIMIT} slots. Shorten the window or use a longer interval.`);
+    return formError(form, `That window creates more than ${ATOMIC_SLOT_LIMIT} slots. Shorten the window or use a longer interval.`);
   }
   const rows = times.map(t => newSlotRow(occasion, slotDate, t.start, t.end, form.capacity.value));
   const btn = form.querySelector('button[type="submit"]');
