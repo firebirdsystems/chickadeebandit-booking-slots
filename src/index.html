@@ -266,12 +266,15 @@ async function dbAll(sql, params = []) {
  */
 async function syncCalendar() {
   if (!STORE_URL || !DB || !canManage()) return;
-  const events = buildCalendarEvents(occasions, slots, bookings, hubToday());
-  await fetch(STORE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: "calendar_events", value: JSON.stringify(events) }),
-  }).catch(() => {});
+  // Callers do not await or catch this, so nothing may escape it.
+  try {
+    const events = buildCalendarEvents(occasions, slots, bookings, hubToday());
+    await fetch(STORE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "calendar_events", value: JSON.stringify(events) }),
+    }).catch(() => {});
+  } catch (e) { console.error(e); }
 }
 
 function publish(type, subject_id, payload) {
@@ -484,6 +487,7 @@ async function saveOccasion(form) {
   const fields = { title, location: f("location"), description: f("description") };
 
   const btn = form.querySelector('button[type="submit"]');
+  const idleLabel = editingOccasionId ? "Save changes" : "Open booking sheet";
   if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
 
   let created = null;
@@ -494,9 +498,11 @@ async function saveOccasion(form) {
       created = await createOccasion(fields);
     }
   } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = editingOccasionId ? "Save changes" : "Open booking sheet"; }
     saveFailed(form);
     return;
+  } finally {
+    // Restored on success too: if the redraw below throws, this form stays up.
+    if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
   }
   // The write is committed: the redraw, the event and the calendar republish
   // sit outside its try so a failure in them is not reported as a failed save.
@@ -613,9 +619,11 @@ async function addSlots(form) {
     // so a run can never become partially visible after a failed request.
     if (DB) await dbBatch(rows.map(insertSlotStatement));
   } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = "Add"; }
     saveFailed(form);
     return;
+  } finally {
+    // Restored on success too: if the redraw below throws, this form stays up.
+    if (btn) { btn.disabled = false; btn.textContent = "Add"; }
   }
   slots = [...slots, ...rows];
   form.reset();
