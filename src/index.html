@@ -486,15 +486,26 @@ async function saveOccasion(form) {
   const btn = form.querySelector('button[type="submit"]');
   if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
 
+  let created = null;
   try {
     if (editingOccasionId) {
       await updateOccasion(editingOccasionId, fields);
     } else {
-      await createOccasion(fields);
+      created = await createOccasion(fields);
     }
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = editingOccasionId ? "Save changes" : "Open booking sheet"; }
     saveFailed(form);
+    return;
+  }
+  // The write is committed: the redraw, the event and the calendar republish
+  // sit outside its try so a failure in them is not reported as a failed save.
+  if (created) {
+    showNotice("Booking sheet opened. Add the time slots people can book.");
+    publish("booking_slots.occasion_opened", created.id, { title: created.title });
+  } else {
+    showNotice("Booking sheet updated.");
+    syncCalendar();
   }
 }
 
@@ -516,8 +527,7 @@ async function createOccasion(fields) {
   selectedOccasionId = occasion.id;
   view = "active";
   editingOccasionId = null;
-  showNotice("Booking sheet opened. Add the time slots people can book.");
-  publish("booking_slots.occasion_opened", occasion.id, { title: occasion.title });
+  return occasion;
 }
 
 /**
@@ -546,8 +556,6 @@ async function updateOccasion(occasionId, fields) {
   editingOccasionId = null;
   selectedOccasionId = occasionId;
   view = "active";
-  showNotice("Booking sheet updated.");
-  syncCalendar();
 }
 
 // One place builds a slot row, so `label` and `occasion_title` can never be
@@ -604,15 +612,16 @@ async function addSlots(form) {
     // generator is capped at the same 25-statement request limit in slotTimes,
     // so a run can never become partially visible after a failed request.
     if (DB) await dbBatch(rows.map(insertSlotStatement));
-    slots = [...slots, ...rows];
-    form.reset();
-    form.capacity.value = "1";
-    showNotice(rows.length === 1 ? `Added ${rows[0].label}.` : `Added ${rows.length} slots on ${dateLabel(slotDate)}.`);
-    syncCalendar();
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "Add"; }
     saveFailed(form);
+    return;
   }
+  slots = [...slots, ...rows];
+  form.reset();
+  form.capacity.value = "1";
+  showNotice(rows.length === 1 ? `Added ${rows[0].label}.` : `Added ${rows.length} slots on ${dateLabel(slotDate)}.`);
+  syncCalendar();
 }
 
 async function removeSlot(slotId) {
@@ -645,10 +654,6 @@ async function removeSlot(slotId) {
       return;
     }
     if (DB) await dbq("DELETE FROM app_booking_slots__slots WHERE id = ?", [slotId]);
-    slots = slots.filter(s => s.id !== slotId);
-    bookings = bookings.filter(b => b.slot_id !== slotId);
-    showNotice("Slot removed.");
-    syncCalendar();
   } catch (e) {
     if (admissionPaused && slots.some(s => s.id === slotId)) {
       try {
@@ -658,7 +663,12 @@ async function removeSlot(slotId) {
     }
     console.error(e);
     showError("Couldn’t remove the slot — try again.");
+    return;
   }
+  slots = slots.filter(s => s.id !== slotId);
+  bookings = bookings.filter(b => b.slot_id !== slotId);
+  showNotice("Slot removed.");
+  syncCalendar();
 }
 
 async function toggleSlotClosed(slotId) {
@@ -677,11 +687,11 @@ async function toggleSlotClosed(slotId) {
   const status = closing ? "closed" : "open";
   try {
     if (DB) await dbq("UPDATE app_booking_slots__slots SET status = ? WHERE id = ?", [status, slotId]);
-    const i = slots.findIndex(s => s.id === slotId);
-    if (i !== -1) slots[i] = { ...slots[i], status };
-    render();
-    syncCalendar();
-  } catch (e) { console.error(e); showError("Couldn’t update the slot — try again."); }
+  } catch (e) { console.error(e); showError("Couldn’t update the slot — try again."); return; }
+  const i = slots.findIndex(s => s.id === slotId);
+  if (i !== -1) slots[i] = { ...slots[i], status };
+  render();
+  syncCalendar();
 }
 
 // How many bookings this slot accepts. The hub enforces it atomically inside
@@ -718,10 +728,10 @@ async function setCapacity(slotId, raw) {
     } else if (DB) {
       await dbq("UPDATE app_booking_slots__slots SET capacity = ? WHERE id = ?", [next, slotId]);
     }
-    const i = slots.findIndex(s => s.id === slotId);
-    if (i !== -1) slots[i] = { ...slots[i], capacity: next };
-    render();
-  } catch (e) { console.error(e); showError("Couldn’t change the capacity — try again."); }
+  } catch (e) { console.error(e); showError("Couldn’t change the capacity — try again."); return; }
+  const i = slots.findIndex(s => s.id === slotId);
+  if (i !== -1) slots[i] = { ...slots[i], capacity: next };
+  render();
 }
 
 async function setOccasionStatus(occasionId, status) {
@@ -736,11 +746,11 @@ async function setOccasionStatus(occasionId, status) {
   }
   try {
     if (DB) await dbq("UPDATE app_booking_slots__occasions SET status = ? WHERE id = ?", [status, occasionId]);
-    const i = occasions.findIndex(o => o.id === occasionId);
-    if (i !== -1) occasions[i] = { ...occasions[i], status };
-    showNotice(status === "closed" ? "Booking sheet closed." : "Booking sheet reopened.");
-    syncCalendar();
-  } catch (e) { console.error(e); showError("Couldn’t update the booking sheet — try again."); }
+  } catch (e) { console.error(e); showError("Couldn’t update the booking sheet — try again."); return; }
+  const i = occasions.findIndex(o => o.id === occasionId);
+  if (i !== -1) occasions[i] = { ...occasions[i], status };
+  showNotice(status === "closed" ? "Booking sheet closed." : "Booking sheet reopened.");
+  syncCalendar();
 }
 
 // The public who's-booked feed is gated per occasion (feed parent_where reads
@@ -796,12 +806,6 @@ async function deleteOccasion(occasionId) {
     // and the batch form refuses a declared table rather than skipping the
     // cascade.
     if (DB) await dbq("DELETE FROM app_booking_slots__occasions WHERE id = ?", [occasionId]);
-    occasions = occasions.filter(o => o.id !== occasionId);
-    slots = slots.filter(s => s.occasion_id !== occasionId);
-    bookings = bookings.filter(b => b.occasion_id !== occasionId);
-    selectedOccasionId = null;
-    showNotice("Booking sheet deleted.");
-    syncCalendar();
   } catch (e) {
     if (admissionPaused && occasions.some(o => o.id === occasionId)) {
       try {
@@ -811,7 +815,14 @@ async function deleteOccasion(occasionId) {
     }
     console.error(e);
     showError("Couldn’t delete the booking sheet — try again.");
+    return;
   }
+  occasions = occasions.filter(o => o.id !== occasionId);
+  slots = slots.filter(s => s.occasion_id !== occasionId);
+  bookings = bookings.filter(b => b.occasion_id !== occasionId);
+  selectedOccasionId = null;
+  showNotice("Booking sheet deleted.");
+  syncCalendar();
 }
 
 // ── render ──
