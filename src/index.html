@@ -137,7 +137,7 @@ import {
   readInChunks, DB_MAX_IN_PARAMS,
   bookingsForSlot, parseCapacity, slotState,
   slotsForOccasion, openSlotsForForm, occasionTotals as _occasionTotals, searchableFields,
-  buildCalendarEvents, seesGuestDetails,
+  buildCalendarEvents, seesGuestDetails, shareFailureLine,
 } from "./logic.js";
 
 const CONTEXT    = window.__CONTEXT_URL    ?? "";
@@ -1030,7 +1030,7 @@ function openModal(inner, { width = 400, testid = "modal" } = {}) {
 let _shareLinks = [];
 let _shareEntitled = false;
 
-async function openShareModal(occasionId) {
+async function openShareModal(occasionId, { afterWrite = false } = {}) {
   const occasion = occasions.find(o => o.id === occasionId);
   if (!occasion) return;
   let status;
@@ -1038,9 +1038,12 @@ async function openShareModal(occasionId) {
     status = await share.listAll();
   } catch (err) {
     console.error(err);
+    if (afterWrite) throw err;
     hubAlert("Couldn't load share links");
     return;
   }
+  // A refused list read comes back EMPTY (`limits: null`); after a write that must not draw as "none".
+  if (afterWrite && status.limits === null) throw new Error("Share links could not be re-read");
   _shareLinks = status.links;
   _shareEntitled = status.entitled;
   const active = activeShareLinks(_shareLinks, occasionId);
@@ -1075,7 +1078,7 @@ async function openShareModal(occasionId) {
     <label class="share-opt">
       <input type="checkbox" id="share-writable" data-testid="share-writable" /> Let people book a time through the link
     </label>
-    <input id="share-password" type="text" placeholder="Optional password (min 4 chars)" autocomplete="off" />
+    <input id="share-password" type="text" placeholder="Optional password (min 6 chars)" autocomplete="off" />
   ` : "";
   const shareDescription = _shareEntitled
     ? "Anyone with the link can see the sheet. Turn on booking below if they should be able to claim an open time."
@@ -1112,15 +1115,28 @@ async function createShareLink(occasionId) {
   const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
   const writable = !!document.getElementById("share-writable")?.checked;
   const password = document.getElementById("share-password")?.value?.trim() || undefined;
+  // The hub refuses a short password; say so here rather than as a failure to retry.
+  if (password && password.length < 6) { hubAlert("The password needs at least 6 characters."); return; }
   const btn = modalEl?.querySelector("[data-share-create]");
   if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+  let link;
   try {
-    const link = await share.create("occasion", occasionId, { expiresInHours: hours, label: occasion?.title, writable, password });
-    try { await navigator.clipboard.writeText(link.url); } catch { /* the re-render shows the url to copy */ }
-    await openShareModal(occasionId);
+    link = await share.create("occasion", occasionId, { expiresInHours: hours, label: occasion?.title, writable, password });
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
-    hubAlert("Couldn't create share link", { description: err.message });
+    console.error(err);
+    hubAlert(err?.status === 402 && (writable || password || hours > 720)
+      ? "Links with a password, bookings or a longer expiry need an active plan."
+      : shareFailureLine(err, { action: "create the share link", thing: "booking sheet" }));
+    return;
+  }
+  try { await navigator.clipboard.writeText(link.url); } catch { /* the re-render shows the url to copy */ }
+  // The link exists now; a failed list re-read must not read as a failed create.
+  try { await openShareModal(occasionId, { afterWrite: true }); }
+  catch (err) {
+    console.error(err);
+    closeModal();
+    hubAlert("Share link created", { description: "Couldn’t refresh the list — open Share again to see it." });
   }
 }
 
@@ -1133,8 +1149,24 @@ async function copyShareLink(id) {
 
 async function revokeShareLink(id, occasionId) {
   if (!await hubConfirm({ message: "Revoke this share link?", description: "Anyone using it will immediately lose access.", confirmLabel: "Revoke" })) return;
-  try { await share.revoke(id); await openShareModal(occasionId); }
-  catch (err) { console.error(err); hubAlert("Couldn’t revoke the share link — try again."); }
+  try { await share.revoke(id); }
+  catch (err) {
+    console.error(err);
+    // A 404 is a link the hub no longer has: done; the refresh below drops it.
+    if (err?.status !== 404) { hubAlert(shareFailureLine(err, { action: "revoke the share link", thing: "booking sheet" })); return; }
+  }
+  _shareLinks = _shareLinks.filter(l => l.id !== id);
+  try { await openShareModal(occasionId, { afterWrite: true }); }
+  catch (err) {
+    console.error(err);
+    closeModal();
+    hubAlert("Share link revoked", { description: "Couldn’t refresh the list — open Share again to see it." });
+    return;
+  }
+  // The hub's 404 also covers another member's link it would not let this one revoke.
+  if (activeShareLinks(_shareLinks, occasionId).some(l => l.id === id)) {
+    hubAlert("You don’t have permission to revoke the share link.");
+  }
 }
 
 function render() {

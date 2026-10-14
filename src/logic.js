@@ -354,3 +354,25 @@ export async function readInChunks(ids, runChunk, size = DB_MAX_IN_PARAMS) {
   const pages = await Promise.all(chunkIds(ids, size).map(runChunk));
   return pages.flat().sort(compareBookings);
 }
+
+/**
+ * The line a failed share-link create or revoke shows ("Hub endpoints other than `/api/db`"
+ * in the app-template guide). The SDK's share helper puts the hub's `.status` on its error;
+ * the hub's text never reaches the screen.
+ *   402 — on a plain link, the free plan's active-link cap (a 402 for a password, sign-ups
+ *         or a longer expiry is the caller's plan line, checked before this)
+ *   409 — `code: "share_link_limit"` is a paid household's active-link cap; a 409 without
+ *         that code (a failure inside the mint, or an older hub) keeps "try again"
+ *   400 — `code: "password_too_short"`; the caller pre-checks the length, so this is a backstop
+ *   403 — not allowed, including `code: "not_owner"` (revoking another member's link);
+ *   404 — the item is gone (a revoke's 404 is the caller's: the link is already gone, or an
+ *         older hub refusing a non-owner — the caller re-reads the list)
+ */
+export function shareFailureLine(e, { action, thing } = {}) {
+  if (e?.status === 402) return "Too many share links are active — revoke one first.";
+  if (e?.status === 409 && e?.code === "share_link_limit") return "Too many share links are active — revoke one first.";
+  if (e?.status === 400 && e?.code === "password_too_short") return "The password needs at least 6 characters.";
+  if (e?.status === 403) return `You don’t have permission to ${action}.`;
+  if (e?.status === 404) return `This ${thing} has been removed.`;
+  return `Couldn’t ${action} — try again.`;
+}
