@@ -242,9 +242,5 @@
       "subtitle": "subtitle",
       "when": "at"
     }
-  },
-
-  "resource_limits": {
-    "max_db_bytes": 52428800
   }
 }
