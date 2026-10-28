@@ -18,7 +18,7 @@
 -- a driveway sale, OFF for conferences where visitors should not see each
 -- other. It defaults to 'no' because the private default is the safe one.
 CREATE TABLE IF NOT EXISTS app_booking_slots__occasions (
-  id              TEXT PRIMARY KEY,
+  id              TEXT NOT NULL PRIMARY KEY,
   title           TEXT NOT NULL,                 -- "Parent-teacher conferences"
   location        TEXT NOT NULL DEFAULT '',      -- "Room 12" / "the driveway"
   description     TEXT NOT NULL DEFAULT '',      -- what this is, and anything bookers should know
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS app_booking_slots__occasions (
 -- it says. `start_time` is declared plaintext so the agenda and glance can
 -- ORDER BY it — ciphertext orders meaninglessly.
 CREATE TABLE IF NOT EXISTS app_booking_slots__slots (
-  id             TEXT PRIMARY KEY,
+  id             TEXT NOT NULL PRIMARY KEY,
   occasion_id    TEXT NOT NULL,
   slot_date      TEXT NOT NULL,                 -- yyyy-mm-dd, plaintext by suffix
   start_time     TEXT NOT NULL DEFAULT '',      -- HH:MM, household-local, plaintext (declared)
